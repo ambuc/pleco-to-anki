@@ -3,8 +3,9 @@
 # by James Buckland
 # Aug 2020
 
-import xml.etree.ElementTree as ET
 import re
+import xml.etree.ElementTree as ET
+import sys
 
 def is_cjk(character):
     """"
@@ -155,13 +156,13 @@ def pron_to_html(pron):
         output.append(str(ET.tostring(span, encoding='unicode')))
     return ' '.join(output)
 
-for card in ET.parse("example.xml").getroot().find('cards'):
+for card in ET.parse(sys.argv[1]).getroot().find('cards'):
     entry = extract_entry(card)
     headword = extract_headword(entry)
     pron = extract_pron(entry)
     pron_to_html(pron.text)
     short_defn = extract_short_defn(entry)
-    print("%s;%s;%s" % (headword.text, pron_to_html(pron.text), short_defn))
+    print("%s;%s;%s" % (pron_to_html(pron.text), headword.text, short_defn))
 
 
 
