@@ -56,7 +56,11 @@ def extract_short_defn(entry):
         last_english_char += 1
       else:
         break
-    return defn.text[:last_english_char]
+    short_defn = defn.text[:last_english_char]
+    short_defn = short_defn.replace(';', '.')
+    short_defn = short_defn.replace('\t', '')
+    short_defn = short_defn.replace('\n', '')
+    return short_defn
 
 character_splitter = re.compile(r"([a-zü]+?[0-9]+?)+?") 
 tone_splitter = re.compile(r"([a-zü]+?)([0-9]+?)") 
