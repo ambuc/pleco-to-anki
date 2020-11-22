@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<plecoflash formatversion="2" creator="Pleco User -1" generator="Pleco 2.0 Flashcard Exporter" platform="Android" created="1605883885">
+	<categories/>
+	<cards>
+		<card language="chinese">
+			<entry>
+				<headword charset="sc">感冒</headword>
+				<headword charset="tc">感冒</headword>
+				<pron type="hypy" tones="numbers">gan3mao4</pron>
+				<defn>noun common cold 
+verb 1 catch cold 2 dialect be interested in; like (usu. used in the negative)</defn>
+			</entry>
+			<dictref dictid="PACE" entryid="21428224"/>
+		</card>
+		<card language="chinese">
+			<entry>
+				<headword charset="sc">黑</headword>
+				<headword charset="tc">黑</headword>
+				<pron type="hypy" tones="numbers">hei1</pron>
+				<defn>adjective 1 black (opp. 白) 2 dark 3 secret; shady; illegal 4 wicked; sinister 5 reactionary 
+VARIANT OF 17662720表盘biao3pan2表盘 noun dial (plate); watch face</defn>
+			</entry>
+			<dictref dictid="PACE" entryid="17659904"/>
+		</card>
+		<card language="chinese">
+			<entry>
+				<headword charset="sc">进行</headword>
+				<headword charset="tc">進行</headword>
+				<pron type="hypy" tones="numbers">jin4xing2</pron>
+				<defn>verb 1 in progress; underway; proceed 2 carry on; carry out; conduct 3 be on the march; march; advance</defn>
+			</entry>
+			<dictref dictid="PACE" entryid="24315392"/>
+		</card>
+		<card language="chinese">
+			<entry>
+				<headword charset="sc">再次</headword>
+				<headword charset="tc">再次</headword>
+				<pron type="hypy" tones="numbers">zai4ci4</pron>
+				<defn>adverb once more; a second time; once again</defn>
+			</entry>
+			<dictref dictid="PACE" entryid="35585024"/>
+		</card>
+	</cards>
+</plecoflash>
+
