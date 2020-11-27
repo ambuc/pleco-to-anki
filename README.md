@@ -1,7 +1,7 @@
 # pleco-to-anki
 
 A Python script which parses XML output from Pleco and creates
-semicolon-separated CSV data for Anki.
+semicolon-separated CSV data for [Anki](https://apps.ankiweb.net/).
 
 ## Example
 
@@ -30,11 +30,11 @@ verb 1 catch cold 2 dialect be interested in; like (usu. used in the negative)</
 ### Output:
 
 ```csv
-<span><font color="blue">găn</font></span> <span><font color="purple">mào</font></span>;感冒;noun common cold verb 1 catch cold 2 dialect be intereste    d in. like (usu. used in the negative)
+<span><font color="blue">găn</font></span> <span><font color="purple">mào</font></span>;感冒;noun common cold verb 1 catch cold 2 dialect be interested in. like (usu. used in the negative)
 ...
 ```
 
-## Prereqisites
+## Prerequisites
 
 *  `git` or `gh`, for downloading the repo.
 *  `bazel`, for building/running the script.
@@ -62,15 +62,15 @@ For me, this script is the keystone of a larger pipeline.
 ### Step 2: Use `p2a` to generate a `.csv`.
 
 *  On your computer, download the `.xml` file you created in the previous step.
-*  Run `bazel run :p2a -- --path=<your_input.xml> > <your_output.csv>` to
+*  Run `bazel run :p2a -- --path=your_input.xml > your_output.csv` to
    generate a new `.csv` file.
    
 This generates a new, semicolon-separated file. The first column is the pinyin
 as HTML, the second column is the word, and the third column is the definition.
 
-### Step 3: Use Anki to import the `.csv`.
+### Step 3: Use [Anki](https://apps.ankiweb.net/) to import the `.csv`.
 
-*  On your computer, open Anki and import the `.csv` file you created in the
-   previous step.
+*  On your computer, open [Anki](https://apps.ankiweb.net/) and import the
+   `.csv` file you created in the previous step.
 *  Make sure the columns map to fields in your custom card layout. Save, sync,
    and quit.
