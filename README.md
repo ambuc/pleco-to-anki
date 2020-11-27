@@ -7,7 +7,7 @@ semicolon-separated CSV data for Anki.
 
 ### Input:
 
-```
+```xml
 <?xml version="1.0" ?>
 <plecoflash formatversion="2" creator="Pleco User -1" generator="Pleco 2.0 Flashcard Exporter" platform="Android" created="1605883885">
   <categories/>
@@ -29,7 +29,7 @@ verb 1 catch cold 2 dialect be interested in; like (usu. used in the negative)</
 
 ### Output:
 
-```
+```csv
 <span><font color="blue">găn</font></span> <span><font color="purple">mào</font></span>;感冒;noun common cold verb 1 catch cold 2 dialect be intereste    d in. like (usu. used in the negative)
 ...
 ```
