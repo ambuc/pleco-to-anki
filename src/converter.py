@@ -1,3 +1,4 @@
+import subprocess
 import re
 from enum import Enum
 import sys
@@ -170,9 +171,9 @@ def process_path(path, audio_path):
             # "~/path/to/foo1bar2.flac"
             full_path = os.path.join(audio_path, partial_path)
             if not os.path.exists(full_path):
-              cmd = f"say -v \"Ting-Ting\" \"{characters}\" -o {full_path}"
-              os.system(cmd)
-              logging.info(cmd)
+              cmd = ["/usr/bin/say", "-v", "Ting-Ting", characters,
+                     "-o", full_path]
+              logging.info("%s", subprocess.run(cmd, capture_output=True))
             result.append("%s;%s;%s;%s" % (to_html(pronunciation_obj.text),
                                            _extract_headword(entry).text,
                                            _extract_short_definition(entry),
