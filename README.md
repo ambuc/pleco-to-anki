@@ -64,6 +64,10 @@ For me, this script is the keystone of a larger pipeline.
 *  On your computer, download the `.xml` file you created in the previous step.
 *  Run `bazel run :p2a -- --path=your_input.xml > your_output.csv` to
    generate a new `.csv` file.
+*  (Mac-only, optional): specify an 
+   `--audio_out=~/Library/Application\ Support/Anki2/User\ 1/collection.media`
+   path to a directory in which to write audio files. (Mac-only since this uses
+   the `say` utility.)
    
 This generates a new, semicolon-separated file. The first column is the pinyin
 as HTML, the second column is the word, and the third column is the definition.

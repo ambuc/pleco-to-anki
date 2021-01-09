@@ -4,7 +4,9 @@ py_library(
     name = "converter",
     srcs = ["converter.py"],
     srcs_version = "PY3",
-    deps = [],
+    deps = [
+        "@abseil_py//absl/logging",
+    ],
 )
 
 py_test(
@@ -19,4 +21,3 @@ py_test(
         ":converter",
     ],
 )
-

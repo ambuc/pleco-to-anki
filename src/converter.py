@@ -1,7 +1,9 @@
 import re
 from enum import Enum
 import sys
+import os
 import xml.etree.ElementTree as ET
+from absl import logging
 
 _CHARACTER_SPLITTER_RE = re.compile(r"([a-zü]+?[0-9]+?)+?")
 _TONE_SPLITTER_RE = re.compile(r"([a-zü]+?)([0-9]+?)")
@@ -154,12 +156,30 @@ def to_html(pronunciation_obj):
     return ' '.join(output)
 
 
-def process_path(path):
+def process_path(path, audio_path):
     result = []
     for card in ET.parse(path).getroot().find('cards'):
         entry = card.find('entry')
         pronunciation_obj = _extract_pronunicationstring(entry)
-        result.append("%s;%s;%s" % (to_html(pronunciation_obj.text),
-                                    _extract_headword(entry).text,
-                                    _extract_short_definition(entry)))
+
+        if audio_path is not None:
+            characters = _extract_headword(entry).text
+            # "foo1bar2.flac"
+            partial_path = re.sub(
+                r'\W+', '', str(pronunciation_obj.text)).lower() + ".flac"
+            # "~/path/to/foo1bar2.flac"
+            full_path = os.path.join(audio_path, partial_path)
+            if not os.path.exists(full_path):
+              cmd = f"say -v \"Ting-Ting\" \"{characters}\" -o {full_path}"
+              os.system(cmd)
+              logging.info(cmd)
+            result.append("%s;%s;%s;%s" % (to_html(pronunciation_obj.text),
+                                           _extract_headword(entry).text,
+                                           _extract_short_definition(entry),
+                                           f"[sound:{partial_path}]"))
+        else:
+            result.append("%s;%s;%s" % (to_html(pronunciation_obj.text),
+                                        _extract_headword(entry).text,
+                                        _extract_short_definition(entry)))
+
     return '\n'.join(result)

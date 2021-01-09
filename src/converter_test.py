@@ -1,6 +1,7 @@
 import converter
 import os
 import unittest
+import tempfile
 
 
 def strip_white_space(str):
@@ -40,7 +41,12 @@ class ConverterTest(unittest.TestCase):
     def test_run(self):
         with open("testdata/output.csv", "r") as f:
             self.assertEqual(strip_white_space(converter.process_path(
-                "testdata/input.xml")), strip_white_space(f.read()))
+                "testdata/input.xml", None)), strip_white_space(f.read()))
+
+    def test_run_with_audio(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(strip_white_space(converter.process_path(
+                "testdata/input.xml", d)), strip_white_space(f.read()))
 
 
 if __name__ == '__main__':

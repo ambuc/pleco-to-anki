@@ -6,6 +6,9 @@ filegroup(
 
 filegroup(
     name = "output_data",
-    srcs = ["output.csv"],
+    srcs = [
+        "output.csv",
+        "output-audio.csv",
+    ],
     visibility = ["//visibility:public"],
 )
