@@ -1,3 +1,4 @@
+import csv
 import subprocess
 import re
 from enum import Enum
@@ -157,14 +158,34 @@ def to_html(pronunciation_obj):
     return ' '.join(output)
 
 
-def process_path(path, audio_path):
+def make_frequencies_dict(csv_path):
+    """Returns dict from char to float; lower is more common."""
+    if csv_path is None:
+        return None
+
+    d = {}
+    with open(csv_path) as f:
+        reader = csv.reader(f)
+        # idx, char, count, percentage
+        # ['1', '的', '123456', '1.23456']
+        for row in reader:
+            d[row[1]] = float(row[3])
+    return d
+    
+
+def process_path(path, audio_path, frequencies_csv_path):
+    frequencies_dict = make_frequencies_dict(frequencies_csv_path)
+
     result = []
     for card in ET.parse(path).getroot().find('cards'):
         entry = card.find('entry')
         pronunciation_obj = _extract_pronunicationstring(entry)
 
+        characters = _extract_headword(entry).text
+
+        in_progress = [ to_html(pronunciation_obj.text), characters, _extract_short_definition(entry),  ]
+
         if audio_path is not None:
-            characters = _extract_headword(entry).text
             # "foo1bar2.flac"
             partial_path = re.sub(
                 r'\W+', '', str(pronunciation_obj.text)).lower() + ".flac"
@@ -174,13 +195,13 @@ def process_path(path, audio_path):
               cmd = ["/usr/bin/say", "-v", "Ting-Ting", characters,
                      "-o", full_path]
               logging.info("%s", subprocess.run(cmd, capture_output=True))
-            result.append("%s;%s;%s;%s" % (to_html(pronunciation_obj.text),
-                                           _extract_headword(entry).text,
-                                           _extract_short_definition(entry),
-                                           f"[sound:{partial_path}]"))
-        else:
-            result.append("%s;%s;%s" % (to_html(pronunciation_obj.text),
-                                        _extract_headword(entry).text,
-                                        _extract_short_definition(entry)))
+            in_progress.append(f"[sound:{partial_path}]")
+
+        if frequencies_dict is not None:
+            s = [ frequencies_dict.get(c, 99999999) for c in characters ]
+            # average
+            in_progress.append(str(sum(s) / len(s)))
+
+        result.append(";".join(in_progress))
 
     return '\n'.join(result)
