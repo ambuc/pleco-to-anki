@@ -10,10 +10,10 @@ def strip_white_space(str):
 
 class UtilsTest(unittest.TestCase):
     def test_iscjk(self):
-        self.assertTrue(converter.is_cjk("你"))
-        self.assertFalse(converter.is_cjk("a"))
-        self.assertFalse(converter.is_cjk("1"))
-        self.assertFalse(converter.is_cjk(" "))
+        self.assertTrue(converter._is_cjk("你"))
+        self.assertFalse(converter._is_cjk("a"))
+        self.assertFalse(converter._is_cjk("1"))
+        self.assertFalse(converter._is_cjk(" "))
 
     def test_sanitize(self):
         expected = "gan1bei2"
@@ -28,11 +28,11 @@ class UtilsTest(unittest.TestCase):
                          ("bie", converter.Tone.RISING), ("ren", converter.Tone.NEUTRAL)])
 
     def test_tohtml(self):
-        self.assertEqual(converter.to_html(
+        self.assertEqual(converter._pinyin_text_to_html(
             "foo1bar2"), """<span><font color="red">fōo</font></span> <span><font color="green">bár</font></span>""")
-        self.assertEqual(converter.to_html(
+        self.assertEqual(converter._pinyin_text_to_html(
             "foo3bar4"), """<span><font color="blue">fŏo</font></span> <span><font color="purple">bàr</font></span>""")
-        self.assertEqual(converter.to_html("foo5"),
+        self.assertEqual(converter._pinyin_text_to_html("foo5"),
                          """<span><font color="grey">foo</font></span>""")
 
 
@@ -40,16 +40,18 @@ class ConverterTest(unittest.TestCase):
 
     def test_run(self):
         with open("testdata/output.csv", "r") as f:
-            a = strip_white_space(converter.process_path(
-                "testdata/input.xml", None, None))
+            p2ac = converter.PlecoToAnkiConverter(
+                "testdata/input.xml", None, None)
+            a = strip_white_space(p2ac.return_csv())
             b = strip_white_space(f.read())
             self.assertEqual(a, b)
 
     def test_run_with_audio(self):
         with open("testdata/output-audio.csv", "r") as f:
             with tempfile.TemporaryDirectory() as d:
-                a = strip_white_space(converter.process_path(
-                    "testdata/input.xml", d, None))
+                p2ac = converter.PlecoToAnkiConverter(
+                    "testdata/input.xml", d, None)
+                a = strip_white_space(p2ac.return_csv())
                 b = strip_white_space(f.read())
                 self.assertEqual(a, b)
 

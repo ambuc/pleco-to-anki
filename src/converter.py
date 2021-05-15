@@ -1,17 +1,19 @@
-import csv
-import subprocess
-import re
-from enum import Enum
-import sys
-import os
-import xml.etree.ElementTree as ET
 from absl import logging
+from dataclasses import dataclass
+from enum import Enum
+from typing import Optional, Text, Dict
+import csv
+import os
+import re
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
 
 _CHARACTER_SPLITTER_RE = re.compile(r"([a-zü]+?[0-9]+?)+?")
 _TONE_SPLITTER_RE = re.compile(r"([a-zü]+?)([0-9]+?)")
 
 
-def is_cjk(character):
+def _is_cjk(character):
     """Checks whether character is CJK.
 
     See https://stackoverflow.com/a/37311125.
@@ -26,28 +28,29 @@ def is_cjk(character):
                 ])
 
 
-def _extract_headword(entry):
-    for headword_cand in entry.iter('headword'):
+def _lens_headword(entry_element: ET.Element):
+    for headword_cand in entry_element.iter('headword'):
         if headword_cand.get('charset') == "sc":
             return headword_cand
-    raise Exception("No headword found in entry: %s" % str(entry))
+    raise Exception("No headword found in entry: %s" % str(entry_element))
 
 
-def _extract_pronunicationstring(entry):
-    for cand in entry.iter('pron'):
-        if cand.get('type') == "hypy" and cand.get('tones') == "numbers":
-            return cand
+def _lens_pron(entry: ET.Element) -> ET.Element:
+    cand = next(entry.iter("pron"))
+    # <pron type="hypy" tones="numbers">_payload_</pron>
+    if cand.get('type') == "hypy" and cand.get('tones') == "numbers":
+        return cand
     raise Exception("No pronunciationstring could be made from entry: %s" %
                     str(entry))
 
 
-def _extract_short_definition(entry):
+def _lens_defn(entry):
     defn = entry.find('defn')
     if defn == None:
-        return ""
+        return "<no defn>"
     last_english_char = 0
     for char in defn.text:
-        if not is_cjk(char):
+        if not _is_cjk(char):
             last_english_char += 1
         else:
             break
@@ -138,7 +141,7 @@ def _add_diacritic_to_word(syllable, tone):
         return syllable
 
 
-def to_html(pronunciation_obj):
+def _pinyin_text_to_html(pronunciation_obj):
     """
     Turns a string like "bie2ren5" into (green)bié(black)ren, in HTML
     1 = Flat       = Red    = ā
@@ -160,7 +163,7 @@ def to_html(pronunciation_obj):
     return ' '.join(output)
 
 
-def make_frequencies_dict(csv_path):
+def _make_frequencies_dict(csv_path) -> Optional[Dict[Text, float]]:
     """Returns dict from char to float; lower is more common."""
     if csv_path is None:
         return None
@@ -173,37 +176,100 @@ def make_frequencies_dict(csv_path):
         for row in reader:
             d[row[1]] = float(row[3])
     return d
-    
 
-def process_path(path, audio_path, frequencies_csv_path):
-    frequencies_dict = make_frequencies_dict(frequencies_csv_path)
 
-    result = []
-    for card in ET.parse(path).getroot().find('cards'):
-        entry = card.find('entry')
-        pronunciation_obj = _extract_pronunicationstring(entry)
+@dataclass
+class Card:
+    pinyin_html: str
+    characters: str
+    definition: str
+    sound: Optional[str] = None
+    frequency: Optional[float] = None
 
-        characters = _extract_headword(entry).text
 
-        in_progress = [ to_html(pronunciation_obj.text), characters, _extract_short_definition(entry),  ]
+class PlecoToAnkiConverter:
+    def __init__(self, xml_path, audio_path=None, frequencies_csv_path=None):
+        """
+        Args:
+          xml_path: Path to the Pleco xml output file.
+          audio_path: Path to the Anki collection.media folder.
+          frequencies_csv_path: Path to the frequencies csv file.
+        """
+        self._xml_path = xml_path
+        self._audio_path = audio_path
+        self._frequencies_csv_path = frequencies_csv_path
 
-        if audio_path is not None:
-            # "foo1bar2.flac"
-            partial_path = re.sub(
-                r'\W+', '', str(pronunciation_obj.text)).lower() + ".flac"
-            # "~/path/to/foo1bar2.flac"
-            full_path = os.path.join(audio_path, partial_path)
-            if not os.path.exists(full_path):
-              cmd = ["/usr/bin/say", "-v", "Ting-Ting", characters,
-                     "-o", full_path]
-              logging.info("%s", subprocess.run(cmd, capture_output=True))
-            in_progress.append(f"[sound:{partial_path}]")
+        self._should_render_audio = (self._audio_path != None)
+        self._should_compute_frequency = (self._frequencies_csv_path != None)
 
-        if frequencies_dict is not None:
-            s = [ frequencies_dict.get(c, 99999999) for c in characters ]
+        self._frequencies_dict = None
+        if self._should_compute_frequency:
+            self._frequencies_dict = _make_frequencies_dict(
+                frequencies_csv_path)
+
+    def _convert_xml_to_cardobj(self, card: ET.Element) -> Optional[Card]:
+        """Returns None on failure."""
+        entry_element: ET.Element = card.find('entry')
+        assert(entry_element is not None)
+
+        pinyin_element = _lens_pron(entry_element)
+        pinyin_text = pinyin_element.text
+        pinyin_html = _pinyin_text_to_html(pinyin_text)
+
+        characters_element = _lens_headword(entry_element)
+        characters_text = characters_element.text
+
+        definition_text = _lens_defn(entry_element)
+
+        cardobj = Card(pinyin_html=pinyin_html,
+                       characters=characters_text,
+                       definition=definition_text)
+
+        if self._should_render_audio:
+            assert(self._audio_path is not None)
+            # filename has the shape: "foo1bar2.flac"
+            filename = re.sub(
+                r'\W+', '', str(pinyin_element.text)).lower() + ".flac"
+
+            # fullpath has the shape: "~/path/to/foo1bar2.flac"
+            fullpath = os.path.join(self._audio_path, filename)
+
+            # Render the soundfile only if it does not already exist.
+            if not os.path.exists(fullpath):
+                logging.info("%s", subprocess.run(
+                    ["/usr/bin/say", "-v", "Ting-Ting",
+                        characters_text, "-o", fullpath, ],
+                    capture_output=True))
+
+            cardobj.sound = f"[sound:{filename}]"
+
+        if self._should_compute_frequency:
+            assert(self._frequencies_dict is not None)
+            s = [self._frequencies_dict.get(c, 99999999)
+                 for c in characters_text]
             # average
-            in_progress.append(str(sum(s) / len(s)))
+            cardobj.frequency = sum(s) / len(s)
 
-        result.append(";".join(in_progress))
+        return cardobj
 
-    return '\n'.join(result)
+    def _convert_cardobj_to_csv_line(self, cardobj: Card) -> Text:
+        csv_line = []
+        csv_line.append(cardobj.pinyin_html)
+        csv_line.append(cardobj.characters)
+        csv_line.append(cardobj.definition)
+        if cardobj.sound is not None:
+            csv_line.append(cardobj.sound)
+        if cardobj.frequency is not None:
+            csv_line.append(str(cardobj.frequency))
+        return csv_line
+
+    def return_csv(self) -> Text:
+        et_root = ET.parse(self._xml_path).getroot()
+        result = []
+        for cardxml in et_root.find('cards'):
+            cardobj = self._convert_xml_to_cardobj(cardxml)
+            if cardobj is None:
+                continue
+            csv_line = self._convert_cardobj_to_csv_line(cardobj)
+            result.append(';'.join(csv_line))
+        return "\n".join(result)
