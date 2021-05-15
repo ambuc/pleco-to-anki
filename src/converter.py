@@ -43,6 +43,8 @@ def _extract_pronunicationstring(entry):
 
 def _extract_short_definition(entry):
     defn = entry.find('defn')
+    if defn == None:
+        return ""
     last_english_char = 0
     for char in defn.text:
         if not is_cjk(char):

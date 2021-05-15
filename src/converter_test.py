@@ -40,13 +40,18 @@ class ConverterTest(unittest.TestCase):
 
     def test_run(self):
         with open("testdata/output.csv", "r") as f:
-            self.assertEqual(strip_white_space(converter.process_path(
-                "testdata/input.xml", None, None)), strip_white_space(f.read()))
+            a = strip_white_space(converter.process_path(
+                "testdata/input.xml", None, None))
+            b = strip_white_space(f.read())
+            self.assertEqual(a, b)
 
     def test_run_with_audio(self):
-        with tempfile.TemporaryDirectory() as d:
-            self.assertEqual(strip_white_space(converter.process_path(
-                "testdata/input.xml", d, None)), strip_white_space(f.read()))
+        with open("testdata/output-audio.csv", "r") as f:
+            with tempfile.TemporaryDirectory() as d:
+                a = strip_white_space(converter.process_path(
+                    "testdata/input.xml", d, None))
+                b = strip_white_space(f.read())
+                self.assertEqual(a, b)
 
 
 if __name__ == '__main__':
