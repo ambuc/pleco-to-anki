@@ -2,7 +2,7 @@
 
 from absl import app
 from absl import flags
-import src.converter as converter_lib
+from src import converter
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("path", None, "Path to the input .xml.")
@@ -14,10 +14,8 @@ flags.DEFINE_string("frequencies_csv_path", None,
 
 def main(argv):
     del argv
-    p2ac = converter_lib.PlecoToAnkiConverter(FLAGS.path,
-                                              FLAGS.audio_out,
-                                              FLAGS.frequencies_csv_path)
-    print(p2ac.return_csv())
+    print(converter.PlecoToAnki(FLAGS.path,
+          FLAGS.audio_out, FLAGS.frequencies_csv_path))
 
 
 if __name__ == '__main__':
