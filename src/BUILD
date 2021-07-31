@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -13,8 +15,8 @@ py_library(
     srcs = ["converter.py"],
     srcs_version = "PY3",
     deps = [
-        ":pinyin",
         ":frequency",
+        ":pinyin",
         ":sound",
         "@abseil_py//absl/logging",
     ],

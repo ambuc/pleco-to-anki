@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 py_binary(
     name = "p2a",
     srcs = ["p2a.py"],
