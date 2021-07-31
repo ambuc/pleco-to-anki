@@ -12,9 +12,10 @@ class ConverterTest(unittest.TestCase):
         with open("testdata/output.csv", "r") as f:
             with tempfile.TemporaryDirectory() as audio_output_dir:
                 self.maxDiff=10000
-                return_csv = converter.PlecoToAnki(
+                return_struct = converter.PlecoToAnki(
                     "testdata/input.xml", audio_output_dir, "testdata/frequencies.csv")
-                a = strip_white_space(return_csv)
+                vocab_csv = return_struct.vocab_csv
+                a = strip_white_space(vocab_csv)
                 b = strip_white_space(f.read())
                 self.assertEqual(a, b)
 

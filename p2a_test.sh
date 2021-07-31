@@ -4,7 +4,7 @@ binary_path=$(rlocation "__main__/p2a")
 
 expected=$(cat $(rlocation "__main__/testdata/output.csv"))
 
-actual=$($binary_path --path=$(rlocation "__main__/testdata/input.xml"))
+actual=$($binary_path --xml_input_path=$(rlocation "__main__/testdata/input.xml"))
 
 if [[ $expected -ne $actual ]]; then
   echo >&2 "ERROR: expected not actual"

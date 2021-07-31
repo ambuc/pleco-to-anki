@@ -4,6 +4,7 @@ from src import frequency
 
 from absl import logging
 from typing import Text, Optional, List
+from dataclasses import dataclass
 import xml.etree.ElementTree as ET
 
 
@@ -61,6 +62,7 @@ def get_defn(entry) -> Optional[Text]:
     ret = defn.text
     # MUST remove semicolons, csv is semicolon-separated.
     ret = ret.replace(';', '.')
+    ret = ret.replace('\n', ' ')
     return ret
 
 
@@ -102,6 +104,12 @@ def to_csv_cols(pinyin_html: Text, characters: Text, definition: Text, sound: Te
     return ';'.join(cols)
 
 
+@dataclass
+class CsvsStruct:
+    listening_csv: Text
+    vocab_csv: Text
+
+
 def PlecoToAnki(path_to_xml_input_file, directory_of_anki_collection_dot_media, path_to_frequencies_csv):
     frequencies_dict = frequency.make_frequencies_dict(
         path_to_frequencies_csv)
@@ -113,7 +121,8 @@ def PlecoToAnki(path_to_xml_input_file, directory_of_anki_collection_dot_media, 
         raise ValueError("Could not find inner element `cards`.")
     logging.info("Analyzing %d cards.", len(cards_list))
 
-    csv_rows = []
+    vocab_csv_rows = []
+    listening_csv_rows = []
 
     for card in cards_list:
         entry = card.find('entry')
@@ -135,7 +144,7 @@ def PlecoToAnki(path_to_xml_input_file, directory_of_anki_collection_dot_media, 
             directory_of_anki_collection_dot_media, filename)
         sound.write_soundfile(fullpath, headword)
 
-        csv_rows.append(
+        vocab_csv_rows.append(
             ";".join(
                 [
                     headword,
@@ -155,4 +164,21 @@ def PlecoToAnki(path_to_xml_input_file, directory_of_anki_collection_dot_media, 
             )
         )
 
-    return "\n".join(csv_rows)
+        listening_csv_rows.append(
+            ";".join(
+                [
+                    # audiofile
+                    f"[sound:{filename}]",
+                    # meaning
+                    make_defn_html(defn),
+                    # pinyin
+                    pinyin.pinyin_text_to_html(pinyin_str),
+                    # characters
+                    headword,
+                ]
+            )
+        )
+    return CsvsStruct(
+        vocab_csv="\n".join(vocab_csv_rows),
+        listening_csv="\n".join(listening_csv_rows)
+    )
