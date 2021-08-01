@@ -1,69 +1,12 @@
 from src import pinyin
 from src import sound
 from src import frequency
+from src import xml_extractors
 
 from absl import logging
-from typing import Text, Optional, List
+from typing import Text
 from dataclasses import dataclass
 import xml.etree.ElementTree as ET
-
-
-def get_headword(entry) -> Text:
-    headwords_all = list(entry.iter('headword'))
-    if len(headwords_all) == 0:
-        raise ValueError(
-            f"Encountered an entry with no headwords at all: {ET.tostring(entry)}")
-
-    headwords_sc = list(
-        filter(lambda hw: hw.get('charset') == 'sc', headwords_all))
-    if len(headwords_sc) == 0:
-        raise ValueError(
-            f"Could not find a headword with charset=='sc' for entry: {ET.tostring(entry)}")
-
-    headword_sc = headwords_sc[0]
-    if headword_sc.text == None:
-        # return traditional as a fallback.
-        return headwords_all[0].text
-
-    return headword_sc.text
-
-
-def get_pron_numbers(entry) -> Optional[Text]:
-    pron = entry.find('pron')
-    if pron == None:
-        logging.warning("Encountered an entry with no pron: %s",
-                        ET.tostring(entry))
-        return None
-    if pron.get('type') != "hypy":
-        logging.warning(
-            "Encountered an entry without type='hypy': %s", ET.tostring(entry))
-        return None
-    if pron.get('tones') != "numbers":
-        logging.warning(
-            "Encountered an entry without tones='numbers': %s", ET.tostring(entry))
-        return None
-    if pron.text == None:
-        logging.warning(
-            "Encountered an entry with an empty pron: %s", ET.tostring(entry))
-        return None
-    return pron.text
-
-
-def get_defn(entry) -> Optional[Text]:
-    defn = entry.find('defn')
-    if defn == None:
-        logging.warning("Encountered an entry with no defn: %s",
-                        ET.tostring(entry))
-        return None
-    if defn.text == None:
-        logging.warning("Encountered an entry with no defn.text: %s",
-                        ET.tostring(entry))
-        return None
-    ret = defn.text
-    # MUST remove semicolons, csv is semicolon-separated.
-    ret = ret.replace(';', '.')
-    ret = ret.replace('\n', ' ')
-    return ret
 
 
 def match_numbers(defn) -> Text:
@@ -126,16 +69,16 @@ def PlecoToAnki(path_to_xml_input_file, directory_of_anki_collection_dot_media, 
 
     for card in cards_list:
         entry = card.find('entry')
-        headword = get_headword(entry)  # 进行
+        headword = xml_extractors.get_headword(entry)  # 进行
         if headword == None:
             continue
 
-        pron_numbers = get_pron_numbers(entry)  # jin4xing2
+        pron_numbers = xml_extractors.get_pron_numbers(entry)  # jin4xing2
         if pron_numbers == None:
             continue
         pinyin_str = pinyin.sanitize(pron_numbers)
 
-        defn = get_defn(entry)  # whatever
+        defn = xml_extractors.get_defn(entry)  # whatever
         if defn == None:
             continue
 

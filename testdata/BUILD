@@ -10,7 +10,8 @@ filegroup(
 filegroup(
     name = "output_data",
     srcs = [
-        "output.csv",
+        "output-vocab.csv",
+        "output-listening.csv",
     ],
     visibility = ["//visibility:public"],
 )

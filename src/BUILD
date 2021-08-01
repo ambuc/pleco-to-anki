@@ -18,6 +18,7 @@ py_library(
         ":frequency",
         ":pinyin",
         ":sound",
+        ":xml_extractors",
         "@abseil_py//absl/logging",
     ],
 )
@@ -86,5 +87,23 @@ py_library(
     srcs_version = "PY3",
     deps = [
         ":tone",
+    ],
+)
+
+py_library(
+    name = "xml_extractors",
+    srcs = ["xml_extractors.py"],
+    srcs_version = "PY3",
+    deps = [
+        "@abseil_py//absl/logging",
+    ],
+)
+
+py_test(
+    name = "xml_extractors_test",
+    srcs = ["xml_extractors_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":xml_extractors",
     ],
 )
