@@ -17,14 +17,17 @@ import csv
 # 09
 import sox
 
-
 FLAGS = flags.FLAGS
+flags.DEFINE_string("video", None,
+                    "Full URL of the (YouTube) video to download.")
+flags.DEFINE_string("anki_collection", None,
+                    "Full path to Anki collection.media")
+flags.DEFINE_string("output_csv_dir", None,
+                    "Directory in which to write output csv")
 flags.DEFINE_string(
-    "video", None, "Full URL of the (YouTube) video to download.")
-flags.DEFINE_string(
-    "anki_collection", None, "Full path to Anki collection.media")
-flags.DEFINE_string(
-    "output_csv", None, "Full path to output csv")
+    "crop_command", "in_w:in_h/3:0:1.9*in_h/3",
+    "The crop syntax to use to extract the bottom part of the video, which contains the subtitles."
+)
 
 
 def flatten(t):
@@ -37,8 +40,8 @@ def main(argv):
         raise app.Error("Must provide --video.")
     if not FLAGS.anki_collection:
         raise app.Error("Must provide --anki_collection.")
-    if not FLAGS.output_csv:
-        raise app.Error("Must provide --output_csv.")
+    if not FLAGS.output_csv_dir:
+        raise app.Error("Must provide --output_csv_dir.")
 
     # 1. Download video.
     logging.info(f"01 [Downloading] {FLAGS.video}...")
@@ -46,7 +49,8 @@ def main(argv):
     tmpdir = f"/tmp/{yt.video_id}"
     logging.info(f"01 [Downloading] {yt.title} ({yt.video_id}).")
     os.makedirs(tmpdir, exist_ok=True)
-    download_path = yt.streams.get_highest_resolution().download(output_path=tmpdir)
+    download_path = yt.streams.get_highest_resolution().download(
+        output_path=tmpdir)
     logging.info(f"01 [Downloading] wrote to {download_path}")
     # Now lives in /tmp/<id>/<title>.<format>
 
@@ -56,16 +60,17 @@ def main(argv):
     cropped_path = os.path.join(tmpdir, "02_cropped.mp4")
     if os.path.isfile(cropped_path):
         logging.warning(
-            f"02 [Cropping] Cropped file at {cropped_path} already exists, skipping...")
+            f"02 [Cropping] Cropped file at {cropped_path} already exists, skipping..."
+        )
     else:
         logging.info(f"02 [Cropping] Writing cropped video to {cropped_path}")
         # TODO make this crop flag-configurable.
-        preview_crop_command = f'ffplay -i "{download_path}" -vf "crop=in_w:in_h/3:0:1.9*in_h/3"'
+        preview_crop_command = f'ffplay -i "{download_path}" -vf "crop={FLAGS.crop_command}"'
         logging.info(
             f"02 [Cropping] running preview for you: `{preview_crop_command}`")
         subprocess.call(preview_crop_command, shell=True)
         # TODO make this crop flag-configurable.
-        crop_command = f'ffmpeg -i "{download_path}" -filter:v "crop=in_w:in_h/3:0:1.9*in_h/3" -c:a copy "{cropped_path}"'
+        crop_command = f'ffmpeg -i "{download_path}" -filter:v "crop={FLAGS.crop_command}" -c:a copy "{cropped_path}"'
         logging.info(f"02 [Cropping] running `{crop_command}`")
         subprocess.call(crop_command, shell=True)
 
@@ -75,7 +80,8 @@ def main(argv):
     images_dir = os.path.join(tmpdir, "03_images")
     if os.path.exists(images_dir):
         logging.warning(
-            f"03 [SceneDetection] The directory {images_dir} already exists, skipping image extraction.")
+            f"03 [SceneDetection] The directory {images_dir} already exists, skipping image extraction."
+        )
     else:
         video_manager = scenedetect.VideoManager([cropped_path])
         scene_manager = scenedetect.SceneManager()
@@ -95,7 +101,10 @@ def main(argv):
         logging.info(f"03 [SceneDetection] Saving images to {images_dir}...")
         # imagepaths_by_scenenum is a map from scene number to a list of filenames under |images_dir|.)
         imagepaths_by_scenenum = scenedetect.scene_manager.save_images(
-            scenelist, video_manager, output_dir=images_dir, show_progress=True)
+            scenelist,
+            video_manager,
+            output_dir=images_dir,
+            show_progress=True)
         with open(scenelist_csv_path, "w") as f:
             scenedetect.scene_manager.write_scene_list(f, scenelist)
         logging.info(
@@ -104,37 +113,6 @@ def main(argv):
             # Leave only the middle keyframe of each scene.
             os.remove(os.path.join(images_dir, image_paths[0]))
             os.remove(os.path.join(images_dir, image_paths[2]))
-
-    logging.info(
-        f"04 [Image cropping] Iterating through all scenes.")
-    # TODO make this crop flag-configurable.
-    cropping_by_name = {
-        # `hanzi` has a height of 160 (that's around 2/3 of 240) and an offset of 70
-        "hanzi": "x160+0+70",
-    }
-    for name in cropping_by_name.keys():
-        os.makedirs(os.path.join(tmpdir, "04_images_" + name), exist_ok=True)
-    for (_, _, files) in os.walk(images_dir):
-        num_scenes = len(files)
-        files.sort()
-        for i, file in enumerate(files):
-            logging.info(
-                f"04 [Image cropping] Processing scene {i}/{num_scenes}.")
-            # Why `paths[1]`? The default for `save_images` is to save three
-            # images -- the first, middle, and last frame of each scene. I think
-            # we're more likely to not get blur from scene cutting if we take the
-            # middle frame of each scene.
-            in_path = os.path.join(images_dir, file)
-            for name, code in cropping_by_name.items():
-                out_path = os.path.join(
-                    tmpdir, "04_images_" + name, file)
-
-                if os.path.exists(out_path):
-                    logging.warning(
-                        f"04 [Image cropping] Cropped image at {out_path} already exists, skipping...")
-                else:
-                    crop_command = f"convert {in_path} -crop {code} {out_path}"
-                    subprocess.call(crop_command, shell=True)
 
     # 5. Perform OCR text reading on these image files.
     logging.info("05 [OCR]")
@@ -152,17 +130,23 @@ def main(argv):
             hanzi_txt_path = os.path.join(hanzi_dir, f"{i}.txt")
             pinyin_txt_path = os.path.join(pinyin_dir, f"{i}.txt")
 
-            if os.path.exists(hanzi_txt_path) and os.path.exists(pinyin_txt_path):
+            if os.path.exists(hanzi_txt_path) and os.path.exists(
+                    pinyin_txt_path):
                 logging.warning(
-                    f"05 [OCR] Skipping scene {i}, outputs {hanzi_txt_path} and {pinyin_txt_path} both already exist.")
+                    f"05 [OCR] Skipping scene {i}, outputs {hanzi_txt_path} and {pinyin_txt_path} both already exist."
+                )
             else:
                 # hanzi is going to be a list of tuples: List[Tuple[List[char], float]]
-                hanzi_obj = cn.ocr(img_fp=os.path.join(
-                    tmpdir, "04_images_hanzi", file))
+                hanzi_obj = cn.ocr(
+                    img_fp=os.path.join(tmpdir, "03_images", file))
 
                 # TODO better strip punctuation and spacing
                 hanzi_txt = ''.join(flatten([chrs for (chrs, _) in hanzi_obj]))
-                hanzi_txt = hanzi_txt.strip(''.join(['o', ',', '，', ]))
+                hanzi_txt = hanzi_txt.strip(''.join([
+                    'o',
+                    ',',
+                    '，',
+                ]))
 
                 with open(os.path.join(hanzi_dir, f"{i}.txt"), "w") as f:
                     f.write(hanzi_txt)
@@ -173,7 +157,8 @@ def main(argv):
                     f.write(pinyin_txt)
 
                 logging.info(
-                    f"05 [OCR] Scene {i}: Extracted: {pinyin_txt} :: {hanzi_txt}")
+                    f"05 [OCR] Scene {i}: Extracted: {pinyin_txt} :: {hanzi_txt}"
+                )
 
     # 5b. Load OCR'd hanzi into memory.
     logging.info(f"05b [OCR] Loading hanzi into memory.")
@@ -216,7 +201,7 @@ def main(argv):
     # mapping from scene_num to start_sec.
     startsec_by_scenenum = {}
     for [i, _, _, start_sec, _, _, _, _, _, _] in scenes_list:
-        scene_num = int(i)-1
+        scene_num = int(i) - 1
         startsec_by_scenenum[scene_num] = start_sec
 
     # 7. Audio
@@ -226,7 +211,8 @@ def main(argv):
     output_m4a_path = os.path.join(tmpdir, "07_audio.m4a")
     if os.path.exists(output_m4a_path):
         logging.warning(
-            f"07 [Audio] Output m4a path {output_m4a_path} already exists, not writing.")
+            f"07 [Audio] Output m4a path {output_m4a_path} already exists, not writing."
+        )
     else:
         extract_m4a_command = f'ffmpeg -i "{download_path}" -c copy "{output_m4a_path}"'
         subprocess.call(extract_m4a_command, shell=True)
@@ -234,7 +220,8 @@ def main(argv):
     output_flac_path = os.path.join(tmpdir, "07_audio.flac")
     if os.path.exists(output_flac_path):
         logging.warning(
-            f"07 [Audio] Output flac path {output_flac_path} already exists, not writing.")
+            f"07 [Audio] Output flac path {output_flac_path} already exists, not writing."
+        )
     else:
         extract_flac_command = f'ffmpeg -i "{output_m4a_path}" -c:a flac "{output_flac_path}"'
         subprocess.call(extract_flac_command, shell=True)
@@ -255,14 +242,16 @@ def main(argv):
         real_start_sec = float(start_sec)
         real_end_sec = float(end_sec)
         j = scene_num + 1
-        while j < num_scenes and hanzi_by_scenenum[j] == hanzi_by_scenenum[scene_num]:
+        while j < num_scenes and hanzi_by_scenenum[j] == hanzi_by_scenenum[
+                scene_num]:
             joined_scenes.append(j)
             scenes_accounted_for.add(j)
             # Why 6? that's the index of `end_sec` in the scenes_list format. Sorry...
             real_end_sec = float(scenes_list[j][6])
             j += 1
         logging.info(
-            f"08 [Dedup] Decided that scene {scene_num} should be joined with {joined_scenes}.")
+            f"08 [Dedup] Decided that scene {scene_num} should be joined with {joined_scenes}."
+        )
         scene = [scene_num, real_start_sec, real_end_sec, joined_scenes]
         scenes_deduped_list.append(scene)
         scenes_accounted_for.add(scene_num)
@@ -274,15 +263,16 @@ def main(argv):
     for [i, start_sec, end_sec, _] in scenes_deduped_list:
         output_trimmed_audio_path = os.path.join(audio_dir, f"{i}.flac")
         if os.path.exists(output_trimmed_audio_path):
-            logging.warn(
-                f"09 [Audio slice] Output trimmed path {output_trimmed_audio_path} already exists, not writing.")
+            logging.warning(
+                f"09 [Audio slice] Output trimmed path {output_trimmed_audio_path} already exists, not writing."
+            )
         else:
             tfm = sox.Transformer()
             tfm.trim(start_sec, end_sec)
             # TODO explore further compression
             tfm.compand()
-            success = tfm.build_file(
-                output_flac_path, output_trimmed_audio_path)
+            success = tfm.build_file(output_flac_path,
+                                     output_trimmed_audio_path)
             logging.info(f"09 [Audio slice] Wrote {i}: {success}")
 
     # 10. Write audio to Anki collection.
@@ -291,39 +281,45 @@ def main(argv):
         files.sort()
         for file in files:
             scene_num = int(os.path.splitext(os.path.basename(file))[0])
-            dest_file = os.path.join(
-                FLAGS.anki_collection, f"{yt.video_id}-{scene_num:04}.flac")
+            dest_file = os.path.join(FLAGS.anki_collection,
+                                     f"{yt.video_id}-{scene_num:04}.flac")
             if os.path.exists(dest_file):
-                logging.warn(
-                    f"10 [Write to Anki] Not writing {dest_file}, already exists...")
+                logging.warning(
+                    f"10 [Write to Anki] Not writing {dest_file}, already exists..."
+                )
             else:
                 copy_cmd = f'cp "{os.path.join(audio_dir, file)}" "{dest_file}"'
                 subprocess.call(copy_cmd, shell=True)
-                logging.info(
-                    f"10 [Write to Anki] Wrote to {dest_file}.")
+                logging.info(f"10 [Write to Anki] Wrote to {dest_file}.")
 
     logging.info("11 [Write output csv]")
     # format: [sound:filepath.flac];hanzi;pinyin;sourceurl
     output_csv_rows = []
     for scene_num, _, _, _ in scenes_deduped_list:
         ankifile = f"{yt.video_id}-{scene_num:04}.flac"
-        hanzi = hanzi_by_scenenum[scene_num]
-        pinyin = pinyin_by_scenenum[scene_num]
-        if hanzi == "" or pinyin == "":
+        hanzi_txt = hanzi_by_scenenum[scene_num]
+        pinyin_txt = pinyin_by_scenenum[scene_num]
+        if hanzi_txt == "" or pinyin_txt == "":
             continue
         startsec = int(float(startsec_by_scenenum[scene_num]))
         sourceurl = f"{FLAGS.video}&t={startsec}s"
         row = [
             f"[sound:{ankifile}]",
-            hanzi_by_scenenum[scene_num],
-            pinyin_by_scenenum[scene_num],
+            hanzi_txt,
+            pinyin_txt,
             sourceurl,
         ]
         joinedrow = ';'.join(row)
         output_csv_rows.append(joinedrow)
         logging.info(f"11 [Write output csv] writing: {joinedrow}")
-    with open(FLAGS.output_csv, "w") as f:
-        f.write("\n".join(output_csv_rows))
+    output_csv_path = os.path.join(FLAGS.output_csv_dir, f"{yt.video_id}.csv")
+    if os.path.exists(output_csv_path):
+        logging.warning(
+            f"11 [Write output csv] Not writing csv; already exists at {output_csv_path}."
+        )
+    else:
+        with open(output_csv_path, "w") as f:
+            f.write("\n".join(output_csv_rows))
 
     logging.info("DONE")
 
