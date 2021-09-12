@@ -22,7 +22,7 @@ def get_headword(entry) -> Text:
     headword_sc = headwords_sc[0]
     if headword_sc.text == None:
         raise ValueError(
-            f"Encountered an entry with an absent headword text: {ET.tostring(headword_sc)}.")
+            f"Encountered an entry with an absent headword text: {ET.tostring(entry)}.")
 
     return headword_sc.text
 

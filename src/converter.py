@@ -107,20 +107,24 @@ def PlecoToAnki(path_to_xml_input_file, directory_of_anki_collection_dot_media, 
             )
         )
 
-        listening_csv_rows.append(
-            ";".join(
-                [
-                    # audiofile
-                    f"[sound:{filename}]",
-                    # meaning
-                    make_defn_html(defn),
-                    # pinyin
-                    pinyin.pinyin_text_to_html(pinyin_str),
-                    # characters
-                    headword,
-                ]
+        # exclude single-syllable phrases from listening csv
+        if len(headword) > 1:
+            listening_csv_rows.append(
+                ";".join(
+                    [
+                        # audiofile
+                        f"[sound:{filename}]",
+                        # meaning
+                        make_defn_html(defn),
+                        # pinyin
+                        pinyin.pinyin_text_to_html(pinyin_str),
+                        # characters
+                        headword,
+                        # frequency_str
+                        str(frequency.get_frequency(frequencies_dict, headword)),
+                    ]
+                )
             )
-        )
     return CsvsStruct(
         vocab_csv="\n".join(vocab_csv_rows),
         listening_csv="\n".join(listening_csv_rows)
