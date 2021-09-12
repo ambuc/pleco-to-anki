@@ -20,3 +20,13 @@ sh_test(
         "//testdata:output_data",
     ],
 )
+
+py_binary(
+    name = "video2anki",
+    srcs = ["video2anki.py"],
+    srcs_version = "PY3",
+    deps = [
+        "@abseil_py//absl:app",
+        "@abseil_py//absl/flags",
+    ],
+)
