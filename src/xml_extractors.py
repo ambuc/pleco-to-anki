@@ -4,7 +4,7 @@ from typing import Text, Optional
 
 
 def get_headword(entry) -> Text:
-    if entry == None:
+    if entry is None:
         raise ValueError(
             f"Can't call get_headword() on an absent XML entry.")
 
@@ -20,7 +20,7 @@ def get_headword(entry) -> Text:
             f"Could not find a headword with charset=='sc' for entry: {ET.tostring(entry)}")
 
     headword_sc = headwords_sc[0]
-    if headword_sc.text == None:
+    if headword_sc.text is None:
         raise ValueError(
             f"Encountered an entry with an absent headword text: {ET.tostring(entry)}.")
 
@@ -28,11 +28,11 @@ def get_headword(entry) -> Text:
 
 
 def get_pron_numbers(entry) -> Optional[Text]:
-    if entry == None:
+    if entry is None:
         logging.warning("Encountered an empty entry.")
         return None
     pron = entry.find('pron')
-    if pron == None:
+    if pron is None:
         logging.warning("Encountered an entry with no pron: %s",
                         ET.tostring(entry))
         return None
@@ -42,9 +42,10 @@ def get_pron_numbers(entry) -> Optional[Text]:
         return None
     if pron.get('tones') != "numbers":
         logging.warning(
-            "Encountered an entry without tones='numbers': %s", ET.tostring(entry))
+            "Encountered an entry without tones='numbers': %s",
+            ET.tostring(entry))
         return None
-    if pron.text == None:
+    if pron.text is None:
         logging.warning(
             "Encountered an entry with an empty pron: %s", ET.tostring(entry))
         return None
@@ -52,15 +53,15 @@ def get_pron_numbers(entry) -> Optional[Text]:
 
 
 def get_defn(entry) -> Optional[Text]:
-    if entry == None:
+    if entry is None:
         logging.warning("Encountered an absent entry.")
         return None
     defn = entry.find('defn')
-    if defn == None:
+    if defn is None:
         logging.warning("Encountered an entry with no defn: %s",
                         ET.tostring(entry))
         return None
-    if defn.text == None:
+    if defn.text is None:
         logging.warning("Encountered an entry with no defn.text: %s",
                         ET.tostring(entry))
         return None

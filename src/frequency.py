@@ -21,5 +21,5 @@ def make_frequencies_dict(path_to_frequencies_csv: Text) -> Dict[Text, float]:
 
 
 def get_frequency(dict, character) -> float:
-    s = [ dict.get(c, 99999999) for c in character ]
+    s = [dict.get(c, 99999999) for c in character]
     return sum(s) / len(s)

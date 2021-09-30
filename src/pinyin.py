@@ -42,6 +42,7 @@ def to_syllablepairs(s: Text) -> List[Tuple[Text, Tone]]:
         ]
     ]
 
+
 def pinyin_text_to_html(s: Text) -> Text:
     """
     Turns a string like "bie2ren5" into (green)bié(black)ren, in HTML
