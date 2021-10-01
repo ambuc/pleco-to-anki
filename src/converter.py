@@ -26,7 +26,9 @@ def to_csv_cols(
 @dataclass
 class CsvsStruct:
     listening_csv: Text
+    listening_length: int
     vocab_csv: Text
+    vocab_length: int
 
 
 def PlecoToAnki(
@@ -69,5 +71,7 @@ def PlecoToAnki(
 
     return CsvsStruct(
         vocab_csv="\n".join(vocab_csv_rows),
-        listening_csv="\n".join(listening_csv_rows)
+        vocab_length=len(vocab_csv_rows),
+        listening_csv="\n".join(listening_csv_rows),
+        listening_length=len(listening_csv_rows)
     )

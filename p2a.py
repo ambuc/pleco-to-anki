@@ -25,11 +25,13 @@ def main(argv):
 
     with open(FLAGS.vocab_csv_out, "w") as f:
         f.write(csvs_struct.vocab_csv)
-        logging.info(f"Wrote to {FLAGS.vocab_csv_out}")
+        logging.info(
+            f"Wrote {csvs_struct.vocab_length} rows to {FLAGS.vocab_csv_out}")
 
     with open(FLAGS.listening_csv_out, "w") as f:
         f.write(csvs_struct.listening_csv)
-        logging.info(f"Wrote to {FLAGS.listening_csv_out}")
+        logging.info(
+            f"Wrote {csvs_struct.listening_length} rows to {FLAGS.listening_csv_out}")
 
     # MUST MUST MUST dedup these impls
 
