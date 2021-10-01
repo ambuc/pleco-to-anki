@@ -30,3 +30,14 @@ py_binary(
         "@abseil_py//absl/flags",
     ],
 )
+
+py_binary(
+    name = "toposort",
+    srcs = ["toposort.py"],
+    srcs_version = "PY3",
+    deps = [
+        "//src:card",
+        "@abseil_py//absl:app",
+        "@abseil_py//absl/flags",
+    ],
+)

@@ -1,5 +1,3 @@
-from src import pinyin
-from src import sound
 from src import frequency
 from src import card
 from src import xml_extractors
@@ -51,6 +49,8 @@ def PlecoToAnki(
     for xml_card in cards_list:
         entry = xml_card.find('entry')
         card_obj = card.Card.Build(entry)
+        if not card_obj:
+            continue
         headword = xml_extractors.get_headword(entry)  # 进行
         if headword is None:
             continue
