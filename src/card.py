@@ -18,21 +18,12 @@ class Card():
         self._defn_html = defn_extractor.make_defn_html(self._defn)
 
     @staticmethod
-    def Build(entry) -> Optional["Card"]:
-        try:
-            headword = xml_extractors.get_headword(entry)
-            pron_numbers = xml_extractors.get_pron_numbers(entry)
-            if not pron_numbers:
-                return None
-            pinyin_str = pinyin.sanitize(pron_numbers)
-            if not pinyin_str:
-                return None
-            defn = xml_extractors.get_defn(entry)
-            if not defn:
-                return None
-            return Card(headword, pinyin_str, defn)
-        except:
-            return None
+    def Build(entry) -> "Card":
+        headword = xml_extractors.get_headword(entry)
+        pron_numbers = xml_extractors.get_pron_numbers(entry)
+        pinyin_str = pinyin.sanitize(pron_numbers)
+        defn = xml_extractors.get_defn(entry)
+        return Card(headword, pinyin_str, defn)
 
     def WriteSoundfile(self,
                        directory_of_anki_collection_dot_media: Text):

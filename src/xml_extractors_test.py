@@ -41,27 +41,32 @@ class GetHeadwordTest(unittest.TestCase):
 class GetPronNumbersTest(unittest.TestCase):
     def test_no_entry(self):
         entry = None
-        self.assertEqual(xml_extractors.get_pron_numbers(entry), None)
+        with self.assertRaisesRegex(ValueError, ".*Encountered an empty entry.*"):
+            xml_extractors.get_pron_numbers(entry)
 
     def test_no_pron(self):
         entry = ET.Element('entry')
-        self.assertEqual(xml_extractors.get_pron_numbers(entry), None)
+        with self.assertRaisesRegex(ValueError, ".*Encountered an entry with no pron.*"):
+            xml_extractors.get_pron_numbers(entry)
 
     def test_no_type(self):
         entry = ET.Element('entry')
         pron = ET.SubElement(entry, 'pron')
-        self.assertEqual(xml_extractors.get_pron_numbers(entry), None)
+        with self.assertRaisesRegex(ValueError, ".*Encountered an entry without type='hypy'.*"):
+            xml_extractors.get_pron_numbers(entry)
 
     def test_no_tones(self):
         entry = ET.Element('entry')
         pron = ET.SubElement(entry, 'pron', {'type': 'hypy'})
-        self.assertEqual(xml_extractors.get_pron_numbers(entry), None)
+        with self.assertRaisesRegex(ValueError, ".*Encountered an entry without tones='numbers'.*"):
+            xml_extractors.get_pron_numbers(entry)
 
     def test_no_text(self):
         entry = ET.Element('entry')
         pron = ET.SubElement(
             entry, 'pron', {'type': 'hypy', 'tones': 'numbers'})
-        self.assertEqual(xml_extractors.get_pron_numbers(entry), None)
+        with self.assertRaisesRegex(ValueError, ".*Encountered an entry with an empty pron.*"):
+            xml_extractors.get_pron_numbers(entry)
 
     def test_happy_path(self):
         entry = ET.Element('entry')
@@ -74,17 +79,20 @@ class GetPronNumbersTest(unittest.TestCase):
 class GetDefnTest(unittest.TestCase):
     def test_no_entry(self):
         entry = None
-        self.assertEqual(xml_extractors.get_defn(entry), None)
+        with self.assertRaisesRegex(ValueError, ".*Encountered an absent entry.*"):
+            xml_extractors.get_defn(entry)
 
     def test_no_defn(self):
         entry = ET.Element('entry')
-        self.assertEqual(xml_extractors.get_defn(entry), None)
+        with self.assertRaisesRegex(ValueError, ".*Encountered an entry with no defn.*"):
+            xml_extractors.get_defn(entry)
 
     def test_no_defn_text(self):
         entry = ET.Element('entry')
         defn = ET.SubElement(entry, 'defn')
         defn.text = None
-        self.assertEqual(xml_extractors.get_defn(entry), None)
+        with self.assertRaisesRegex(ValueError, ".*Encountered an entry with no defn.text.*"):
+            xml_extractors.get_defn(entry)
 
     def test_happy_path(self):
         entry = ET.Element('entry')

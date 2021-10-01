@@ -27,44 +27,36 @@ def get_headword(entry) -> Text:
     return headword_sc.text
 
 
-def get_pron_numbers(entry) -> Optional[Text]:
+def get_pron_numbers(entry) -> Text:
     if entry is None:
-        logging.warning("Encountered an empty entry.")
-        return None
+        raise ValueError("Encountered an empty entry.")
     pron = entry.find('pron')
     if pron is None:
-        logging.warning("Encountered an entry with no pron: %s",
-                        ET.tostring(entry))
-        return None
+        raise ValueError("Encountered an entry with no pron: %s",
+                         ET.tostring(entry))
     if pron.get('type') != "hypy":
-        logging.warning(
+        raise ValueError(
             "Encountered an entry without type='hypy': %s", ET.tostring(entry))
-        return None
     if pron.get('tones') != "numbers":
-        logging.warning(
+        raise ValueError(
             "Encountered an entry without tones='numbers': %s",
             ET.tostring(entry))
-        return None
     if pron.text is None:
-        logging.warning(
+        raise ValueError(
             "Encountered an entry with an empty pron: %s", ET.tostring(entry))
-        return None
     return pron.text
 
 
-def get_defn(entry) -> Optional[Text]:
+def get_defn(entry) -> Text:
     if entry is None:
-        logging.warning("Encountered an absent entry.")
-        return None
+        raise ValueError("Encountered an absent entry.")
     defn = entry.find('defn')
     if defn is None:
-        logging.warning("Encountered an entry with no defn: %s",
-                        ET.tostring(entry))
-        return None
+        raise ValueError("Encountered an entry with no defn: %s",
+                         ET.tostring(entry))
     if defn.text is None:
-        logging.warning("Encountered an entry with no defn.text: %s",
-                        ET.tostring(entry))
-        return None
+        raise ValueError("Encountered an entry with no defn.text: %s",
+                         ET.tostring(entry))
     ret = defn.text
     # MUST remove semicolons, csv is semicolon-separated.
     ret = ret.replace(';', '.')

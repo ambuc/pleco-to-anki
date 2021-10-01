@@ -48,15 +48,9 @@ def PlecoToAnki(
 
     for xml_card in cards_list:
         entry = xml_card.find('entry')
-        card_obj = card.Card.Build(entry)
-        if not card_obj:
-            continue
-        headword = xml_extractors.get_headword(entry)  # 进行
-        if headword is None:
-            continue
-
-        defn = xml_extractors.get_defn(entry)  # whatever
-        if defn is None:
+        try:
+            card_obj = card.Card.Build(entry)
+        except BaseException:
             continue
 
         card_obj.WriteSoundfile(directory_of_anki_collection_dot_media)
@@ -67,7 +61,7 @@ def PlecoToAnki(
         )
 
         # exclude single-syllable phrases from listening csv
-        if len(headword) > 1:
+        if len(card_obj._headword) > 1:
             listening_csv_rows.append(
                 card_obj.MakeCsvRowForListening(
                     directory_of_anki_collection_dot_media, frequencies_dict)
