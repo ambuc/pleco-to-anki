@@ -2,10 +2,7 @@ from src import frequency as frequency_lib
 
 import tempfile
 import csv
-from unittest.mock import MagicMock, call
-from typing import cast
 from absl.testing import absltest
-from absl import logging
 
 
 class FrequencyTest(absltest.TestCase):

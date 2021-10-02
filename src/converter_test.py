@@ -17,6 +17,11 @@ class ConverterTest(unittest.TestCase):
                 "testdata/input.xml",
                 audio_output_dir,
                 "testdata/frequencies.csv")
+
+            self.assertEqual(len(r.cards), 4)
+            self.assertSetEqual(set(r.cards.keys()),
+                                set(["再次", "进行", "黑", "感冒"]))
+
             with open("testdata/output-vocab.csv", "r") as f:
                 self.assertEqual(strip_white_space(
                     r.vocab_csv), strip_white_space(f.read()))

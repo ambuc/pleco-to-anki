@@ -1,4 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_library", "py_test", "py_binary")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -194,5 +194,47 @@ py_test(
     deps = [
         ":toposorter",
         "@abseil_py//absl/testing:absltest",
+    ],
+)
+
+py_binary(
+    name = "main",
+    srcs = ["main.py"],
+    srcs_version = "PY3",
+    deps = [
+        ":anki_reader",
+        ":decomposer",
+        ":frequency",
+        ":toposorter",
+        ":converter",
+        ":anki_sources",
+        "@abseil_py//absl:app",
+        "@abseil_py//absl/flags",
+    ],
+)
+
+py_library(
+    name = "anki_sources",
+    srcs = ["anki_sources.py"],
+    srcs_version = "PY3",
+    deps = [
+    ],
+)
+
+py_test(
+    name = "anki_sources_test",
+    srcs = ["anki_sources_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":anki_sources",
+        "@abseil_py//absl/testing:absltest",
+    ],
+)
+
+py_library(
+    name = "anki_reader",
+    srcs = ["anki_reader.py"],
+    srcs_version = "PY3",
+    deps = [
     ],
 )

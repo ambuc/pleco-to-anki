@@ -3,7 +3,7 @@ from src import card
 from src import xml_extractors
 
 from absl import logging
-from typing import Text
+from typing import Mapping, Text, List
 from dataclasses import dataclass
 import xml.etree.ElementTree as ET
 
@@ -24,9 +24,10 @@ def to_csv_cols(
 
 
 @dataclass
-class CsvsStruct:
+class PlecoToAnkiReturnStruct:
     listening_csv: Text
     listening_length: int
+    cards: Mapping[Text, card.Card]
     vocab_csv: Text
     vocab_length: int
 
@@ -44,6 +45,7 @@ def PlecoToAnki(
         raise ValueError("Could not find inner element `cards`.")
     logging.info("Analyzing %d cards.", len(cards_list))
 
+    cards = []
     vocab_csv_rows = []
     listening_csv_rows = []
 
@@ -56,6 +58,8 @@ def PlecoToAnki(
 
         card_obj.WriteSoundfile(directory_of_anki_collection_dot_media)
 
+        cards.append(card_obj)
+
         vocab_csv_rows.append(
             card_obj.MakeCsvRow(fq)
         )
@@ -66,7 +70,8 @@ def PlecoToAnki(
                 card_obj.MakeCsvRowForListening(fq)
             )
 
-    return CsvsStruct(
+    return PlecoToAnkiReturnStruct(
+        cards={card._headword: card for card in cards},
         vocab_csv="\n".join(vocab_csv_rows),
         vocab_length=len(vocab_csv_rows),
         listening_csv="\n".join(listening_csv_rows),

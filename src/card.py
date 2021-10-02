@@ -32,21 +32,24 @@ class Card():
 
         sound.write_soundfile(fullpath, self._headword)
 
+    def MakeRow(self,
+                fq: frequency_lib.Frequencies):
+        return {
+            "characters": self._headword,
+            "pinyin": self._pinyin_html,
+            "meaning": self._defn_html,
+            "sound": f"[sound:{self._filename}]",
+        }
+
     def MakeCsvRow(self,
                    fq: frequency_lib.Frequencies):
+        row = self.MakeRow(fq)
         return ";".join(
             [
-                self._headword,
-
-                # pinyin_html
-                self._pinyin_html,
-
-                # defn html
-                self._defn_html,
-
-                # soundstring
-                f"[sound:{self._filename}]",
-
+                row["characters"],
+                row["pinyin"],
+                row["meaning"],
+                row["sound"],
                 # frequency_str
                 str(fq.get_frequency(self._headword)),
             ]
@@ -54,16 +57,13 @@ class Card():
 
     def MakeCsvRowForListening(self,
                                fq: frequency_lib.Frequencies):
+        row = self.MakeRow(fq)
         return ";".join(
             [
-                # audiofile
-                f"[sound:{self._filename}]",
-                # meaning
-                self._defn_html,
-                # pinyin
-                self._pinyin_html,
-                # characters
-                self._headword,
+                row["sound"],
+                row["meaning"],
+                row["pinyin"],
+                row["characters"],
                 # frequency_str
                 str(fq.get_frequency(self._headword)),
             ]
