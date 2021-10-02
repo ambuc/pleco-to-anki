@@ -25,6 +25,24 @@ py_test(
 )
 
 py_library(
+    name="decomposer",
+    srcs=["decomposer.py"],
+    srcs_version="PY3",
+    deps=[
+        "//third_party:ids"
+    ],
+)
+
+py_test(
+    name = "decomposer_test",
+    srcs = ["decomposer_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":decomposer",
+    ],
+)
+
+py_library(
     name = "defn_extractor",
     srcs = ["defn_extractor.py"],
     srcs_version = "PY3",

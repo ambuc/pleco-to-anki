@@ -27,8 +27,14 @@ def main(argv):
     card_objects = []
     for xml_card in cards_list:
         entry = xml_card.find('entry')
-        card_obj = card_lib.Card.Build(entry)
-        card_objects.append(card_obj)
+        try:
+            card_obj = card_lib.Card.Build(entry)
+            card_objects.append(card_obj)
+        except:
+            continue
+        logging.info(card_obj._headword)
+
+    logging.info(f"Processed {len(card_objects)} cards.")
 
 
 if __name__ == '__main__':
