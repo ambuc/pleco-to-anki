@@ -37,6 +37,7 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         "//src:card",
+        "//src:decomposer",
         "@abseil_py//absl:app",
         "@abseil_py//absl/flags",
     ],

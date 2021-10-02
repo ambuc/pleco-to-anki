@@ -2,7 +2,6 @@ from src import decomposer
 
 from typing import cast
 from absl.testing import absltest
-import more_itertools
 import networkx as nx
 
 # Only create this once. It is expensive.
