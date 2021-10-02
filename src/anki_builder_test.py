@@ -49,7 +49,7 @@ class AnkiBuilderTest(absltest.TestCase):
             ab.process("感冒")
 
             package = ab.make_package()
-            self.assertEqual(len(package.decks), 2)
+            self.assertEqual(len(package.decks), 3)
 
             vocab_v2_deck = next(
                 filter(lambda d: d.name == "zw::vocab_v2", package.decks))
