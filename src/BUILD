@@ -132,6 +132,16 @@ py_library(
 )
 
 py_test(
+    name = "frequency_test",
+    srcs = ["frequency_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":frequency",
+        "@abseil_py//absl/testing:absltest",
+    ],
+)
+
+py_test(
     name = "is_cjk_test",
     srcs = ["is_cjk_test.py"],
     python_version = "PY3",
