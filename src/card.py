@@ -14,6 +14,7 @@ class Card():
         self._defn = defn
         # derived
         self._filename = sound.make_filename(self._pinyin_str)
+        self._sound = f"[sound:{self._filename}]"
         self._pinyin_html = pinyin.pinyin_text_to_html(self._pinyin_str)
         self._defn_html = defn_extractor.make_defn_html(self._defn)
 
@@ -38,7 +39,7 @@ class Card():
             "characters": self._headword,
             "pinyin": self._pinyin_html,
             "meaning": self._defn_html,
-            "sound": f"[sound:{self._filename}]",
+            "sound": self._sound,
         }
 
     def MakeCsvRow(self,

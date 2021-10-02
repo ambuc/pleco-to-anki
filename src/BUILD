@@ -203,6 +203,7 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         ":anki_reader",
+        ":anki_builder",
         ":decomposer",
         ":frequency",
         ":toposorter",
@@ -236,5 +237,27 @@ py_library(
     srcs = ["anki_reader.py"],
     srcs_version = "PY3",
     deps = [
+    ],
+)
+
+py_library(
+    name = "anki_builder",
+    srcs = ["anki_builder.py"],
+    srcs_version = "PY3",
+    deps = [
+        ":anki_sources",
+        ":card",
+        ":decomposer",
+        ":anki_reader",
+    ],
+)
+
+py_test(
+    name = "anki_builder_test",
+    srcs = ["anki_builder_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":anki_builder",
+        "@abseil_py//absl/testing:absltest",
     ],
 )

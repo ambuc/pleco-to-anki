@@ -4,13 +4,12 @@ from absl import app
 from absl import flags
 from absl import logging
 import os
-import genanki
 
-from src import anki_sources
+from src import anki_reader as anki_reader_lib
+from src import anki_builder as anki_builder_lib
 from src import converter as converter_lib
 from src import decomposer as decomposer_lib
 from src import toposorter as toposorter_lib
-from src import anki_reader as anki_reader_lib
 from src import frequency as frequency_lib
 
 
@@ -24,10 +23,6 @@ flags.DEFINE_string("frequencies_csv_path", None,
                     "Path to the frequencies csv, if available.")
 flags.DEFINE_string("apkg_out", None, "Path to write .apkg.")
 
-_MODEL_ID = 10001
-_MODEL_NAME = "note_zw_v2"
-_DECK_ID = 20001
-_DECK_NAME = 'zw_v2'
 _OUTPUT_APKG = 'output.apkg'
 
 
@@ -45,49 +40,26 @@ def main(argv):
     if not FLAGS.apkg_out:
         raise app.UsageError("Must provide --apkg_out.")
 
-    fields = [
-        {'name': 'characters'},
-        {'name': 'pinyin'},
-        {'name': 'meaning'},
-        {'name': 'audio'},
-    ]
-    templates = [
-        anki_sources.gen_template(
-            1, ["characters", "meaning"], ["pinyin", "audio"]),
-        anki_sources.gen_template(
-            2, ["characters", "pinyin", "audio"], ["meaning"]),
-        anki_sources.gen_template(
-            3, ["pinyin", "audio", "meaning"], ["characters"]),
-        anki_sources.gen_template(
-            4, ["characters"], ["pinyin", "meaning", "audio"]),
-    ]
-    model = genanki.Model(
-        _MODEL_ID,
-        _MODEL_NAME,
-        fields=fields,
-        templates=templates,
-        css=anki_sources._CSS)
-
-    struct = converter_lib.PlecoToAnki(
+    pleco_struct = converter_lib.PlecoToAnki(
         FLAGS.xml_input_path, FLAGS.audio_out, FLAGS.frequencies_csv_path)
 
     FQ = frequency_lib.Frequencies(FLAGS.frequencies_csv_path)
     D = decomposer_lib.Decomposer()
-    TS = toposorter_lib.Toposorter(D, struct.cards.values())
+    TS = toposorter_lib.Toposorter(D, pleco_struct.cards.values())
     AR = anki_reader_lib.AnkiReader(FLAGS.collection_path)
-
-    deck = genanki.Deck(_DECK_ID, _DECK_NAME)
+    AB = anki_builder_lib.AnkiBuilder(
+        FLAGS.audio_out, AR, D, pleco_struct.cards)
 
     sorted_headwords = TS.get_sorted(key=FQ.get_frequency)
 
-    print(sorted_headwords)
+    for hw in sorted_headwords:
+        try:
+            AB.process(hw)
+        except Exception as e:
+            logging.info(e)
+            continue
 
-    note = genanki.Note(model=model, fields=[
-                        '你好', 'ni hao', 'hello', 'some_audio'])
-    deck.add_note(note)
-
-    genanki.Package(deck).write_to_file(
-        os.path.join(FLAGS.apkg_out, _OUTPUT_APKG))
+    AB.make_package().write_to_file(os.path.join(FLAGS.apkg_out, _OUTPUT_APKG))
 
 
 if __name__ == '__main__':
