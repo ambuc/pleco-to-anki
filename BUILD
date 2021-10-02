@@ -38,6 +38,7 @@ py_binary(
     deps = [
         "//src:card",
         "//src:decomposer",
+        "//src:toposorter",
         "@abseil_py//absl:app",
         "@abseil_py//absl/flags",
     ],

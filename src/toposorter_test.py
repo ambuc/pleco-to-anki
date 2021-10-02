@@ -98,6 +98,44 @@ class ToposorterTest(absltest.TestCase):
             call("尔"),
         ])
 
+    def test_one_card_one_decomposition_injected_lexiographic_order(self):
+        decomposer = MagicMock()
+
+        def _sef(*args):
+            if args[0] == "你":
+                return MagicMock(decomposition="⿰亻尔")
+            return ValueError("")
+        decomposer.decompose.side_effect = _sef
+
+        cardslist = [
+            MagicMock(_headword="你"),
+            MagicMock(_headword="亻"),
+            MagicMock(_headword="尔"),
+        ]
+        ts = toposorter_lib.Toposorter(decomposer, cardslist)
+
+        def _freq(c):
+            if c == "亻":
+                return 1.1
+            if c == "尔":
+                return 2.2
+
+        self.assertEqual(ts.get_sorted(key=_freq), ["亻", "尔", "你"])
+
+        def _freq_other(c):
+            if c == "亻":
+                return 2.2
+            if c == "尔":
+                return 1.1
+
+        self.assertEqual(ts.get_sorted(key=_freq_other), ["尔", "亻", "你"])
+
+        decomposer.decompose.assert_has_calls(
+            [
+                call("你"), call("亻"), call("尔"), call("亻"), call("尔"),
+            ]
+        )
+
 
 if __name__ == "__main__":
     absltest.main()

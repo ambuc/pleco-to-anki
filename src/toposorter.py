@@ -1,5 +1,5 @@
 import networkx as nx
-from typing import List, Text
+from typing import List, Text, Callable
 
 from src import card as card_lib
 from src import decomposer as decomposer_lib
@@ -41,7 +41,7 @@ class Toposorter():
             except BaseException:
                 pass
 
-    def get_sorted(self) -> List[Text]:
+    def get_sorted(self, key: Callable[[Text], float] = None) -> List[Text]:
         return list(
             nx.algorithms.dag.lexicographical_topological_sort(
-                self._G))
+                self._G, key))
