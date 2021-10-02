@@ -20,14 +20,13 @@ class FrequencyTest(absltest.TestCase):
                     ['4', '不', '125', '8.0'],
                 ])
 
-            d = frequency_lib.make_frequencies_dict(f.name)
-            print(d)
-            self.assertEqual(frequency_lib.get_frequency(d, '的'), 1.0)
-            self.assertEqual(frequency_lib.get_frequency(d, '一'), 2.0)
-            self.assertEqual(frequency_lib.get_frequency(d, '是'), 4.0)
-            self.assertEqual(frequency_lib.get_frequency(d, '不'), 8.0)
+            fq = frequency_lib.Frequencies(f.name)
+            self.assertEqual(fq.get_frequency('的'), 1.0)
+            self.assertEqual(fq.get_frequency('一'), 2.0)
+            self.assertEqual(fq.get_frequency('是'), 4.0)
+            self.assertEqual(fq.get_frequency('不'), 8.0)
 
-            self.assertEqual(frequency_lib.get_frequency(d, '?'), 99999999)
+            self.assertEqual(fq.get_frequency('?'), 99999999)
 
 
 if __name__ == "__main__":

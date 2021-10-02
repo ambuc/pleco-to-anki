@@ -1,4 +1,4 @@
-from src import frequency
+from src import frequency as frequency_lib
 from src import card
 from src import xml_extractors
 
@@ -35,8 +35,7 @@ def PlecoToAnki(
         path_to_xml_input_file,
         directory_of_anki_collection_dot_media,
         path_to_frequencies_csv):
-    frequencies_dict = frequency.make_frequencies_dict(
-        path_to_frequencies_csv)
+    fq = frequency_lib.Frequencies(path_to_frequencies_csv)
 
     element_tree = ET.parse(path_to_xml_input_file)
     root = element_tree.getroot()
@@ -58,15 +57,13 @@ def PlecoToAnki(
         card_obj.WriteSoundfile(directory_of_anki_collection_dot_media)
 
         vocab_csv_rows.append(
-            card_obj.MakeCsvRow(
-                directory_of_anki_collection_dot_media, frequencies_dict)
+            card_obj.MakeCsvRow(fq)
         )
 
         # exclude single-syllable phrases from listening csv
         if len(card_obj._headword) > 1:
             listening_csv_rows.append(
-                card_obj.MakeCsvRowForListening(
-                    directory_of_anki_collection_dot_media, frequencies_dict)
+                card_obj.MakeCsvRowForListening(fq)
             )
 
     return CsvsStruct(

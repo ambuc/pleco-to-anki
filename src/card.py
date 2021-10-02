@@ -1,5 +1,5 @@
 from src import xml_extractors
-from src import frequency
+from src import frequency as frequency_lib
 from src import defn_extractor
 from src import pinyin
 from src import sound
@@ -33,8 +33,7 @@ class Card():
         sound.write_soundfile(fullpath, self._headword)
 
     def MakeCsvRow(self,
-                   directory_of_anki_collection_dot_media: Text,
-                   frequencies_dict):
+                   fq: frequency_lib.Frequencies):
         return ";".join(
             [
                 self._headword,
@@ -49,14 +48,12 @@ class Card():
                 f"[sound:{self._filename}]",
 
                 # frequency_str
-                str(frequency.get_frequency(
-                    frequencies_dict, self._headword)),
+                str(fq.get_frequency(self._headword)),
             ]
         )
 
     def MakeCsvRowForListening(self,
-                               directory_of_anki_collection_dot_media: Text,
-                               frequencies_dict):
+                               fq: frequency_lib.Frequencies):
         return ";".join(
             [
                 # audiofile
@@ -68,7 +65,6 @@ class Card():
                 # characters
                 self._headword,
                 # frequency_str
-                str(frequency.get_frequency(
-                    frequencies_dict, self._headword)),
+                str(fq.get_frequency(self._headword)),
             ]
         )
