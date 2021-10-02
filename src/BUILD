@@ -39,6 +39,7 @@ py_test(
     python_version = "PY3",
     deps = [
         ":decomposer",
+        "@abseil_py//absl/testing:absltest",
     ],
 )
 
@@ -163,5 +164,25 @@ py_test(
     python_version = "PY3",
     deps = [
         ":xml_extractors",
+    ],
+)
+
+py_library(
+    name = "toposorter",
+    srcs = ["toposorter.py"],
+    srcs_version = "PY3",
+    deps = [
+        ":decomposer",
+        ":card",
+    ],
+)
+
+py_test(
+    name = "toposorter_test",
+    srcs = ["toposorter_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":toposorter",
+        "@abseil_py//absl/testing:absltest",
     ],
 )

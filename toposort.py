@@ -5,32 +5,16 @@ from absl import flags
 from absl import logging
 import xml.etree.ElementTree as ET
 import networkx as nx
+from typing import List, Text
 
 from src import card as card_lib
 from src import decomposer as decomposer_lib
+from src import toposorter as toposorter_lib
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("xml_input_path", None,
                     "Path to the .xml file exported by Pleco.")
 
-
-def add(G, D, headword):
-    if len(headword) > 1:
-        # many characters
-        G.add_node(headword)
-        for w in headword:
-            G.add_node(w)
-            G.add_edge(w, headword)
-    else:
-        # one character
-        G.add_node(headword)
-        try:
-            for w in D.decompose(headword).decomposition:
-                if w not in decomposer_lib._VERBS and w != headword:
-                    G.add_edge(w, headword)
-                    add(G, D, w)
-        except:
-            pass
 
 def main(argv):
     del argv
@@ -43,7 +27,6 @@ def main(argv):
         raise app.UsageError("Could not find inner element `cards`.")
 
     D = decomposer_lib.Decomposer()
-    G = nx.DiGraph()  # G.add_edge(part, whole)
 
     logging.info("Analyzing %d cards.", len(cards_list))
 
@@ -55,17 +38,11 @@ def main(argv):
             card_objects.append(card_obj)
         except:
             continue
-        add(G, D, card_obj._headword)
 
-    # detect cycles
-    try:
-        nx.algorithms.cycles.find_cycle(G)
-    except nx.NetworkXNoCycle:
-        pass
-
-    print(list(nx.algorithms.dag.lexicographical_topological_sort(G)))
+    TS = toposorter_lib.Toposorter(D, card_objects)
 
     logging.info(f"Processed {len(card_objects)} cards.")
+    logging.info(TS.get_sorted())
 
 
 if __name__ == '__main__':
