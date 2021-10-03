@@ -1,5 +1,4 @@
 from src import xml_extractors
-from src import frequency as frequency_lib
 
 from absl import logging
 from enum import IntEnum
@@ -180,31 +179,3 @@ class Card():
             "meaning": self._defn_html,
             "sound": self._sound,
         }
-
-    def MakeCsvRow(self,
-                   fq: frequency_lib.Frequencies):
-        row = self.MakeRow()
-        return ";".join(
-            [
-                row["characters"],
-                row["pinyin"],
-                row["meaning"],
-                row["sound"],
-                # frequency_str
-                str(fq.get_frequency(self._headword)),
-            ]
-        )
-
-    def MakeCsvRowForListening(self,
-                               fq: frequency_lib.Frequencies):
-        row = self.MakeRow()
-        return ";".join(
-            [
-                row["sound"],
-                row["meaning"],
-                row["pinyin"],
-                row["characters"],
-                # frequency_str
-                str(fq.get_frequency(self._headword)),
-            ]
-        )

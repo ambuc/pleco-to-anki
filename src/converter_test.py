@@ -4,30 +4,15 @@ import unittest
 import tempfile
 
 
-def strip_white_space(str):
-    return str.replace(" ", "").replace("\t", "").replace("\n", "")
-
-
 class ConverterTest(unittest.TestCase):
 
     def test(self):
-        self.maxDiff = 10000
-        with tempfile.TemporaryDirectory() as audio_output_dir:
-            r = converter.PlecoToAnki(
-                "testdata/input.xml",
-                audio_output_dir,
-                "testdata/frequencies.csv")
+        cards = converter.ExtractCards(
+            "testdata/input.xml")
 
-            self.assertEqual(len(r.cards), 4)
-            self.assertSetEqual(set(r.cards.keys()),
-                                set(["再次", "进行", "黑", "感冒"]))
-
-            with open("testdata/output-vocab.csv", "r") as f:
-                self.assertEqual(strip_white_space(
-                    r.vocab_csv), strip_white_space(f.read()))
-            with open("testdata/output-listening.csv", "r") as f:
-                self.assertEqual(strip_white_space(
-                    r.listening_csv), strip_white_space(f.read()))
+        self.assertEqual(len(cards), 4)
+        self.assertSetEqual(set(cards.keys()),
+                            set(["再次", "进行", "黑", "感冒"]))
 
 
 if __name__ == '__main__':

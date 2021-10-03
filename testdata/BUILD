@@ -6,12 +6,3 @@ filegroup(
     ],
     visibility = ["//visibility:public"],
 )
-
-filegroup(
-    name = "output_data",
-    srcs = [
-        "output-vocab.csv",
-        "output-listening.csv",
-    ],
-    visibility = ["//visibility:public"],
-)

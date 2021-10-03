@@ -39,26 +39,26 @@ def main(argv):
     if not FLAGS.apkg_out:
         raise app.UsageError("Must provide --apkg_out.")
 
-    pleco_struct = converter_lib.PlecoToAnki(
-        FLAGS.xml_input_path, FLAGS.audio_out, FLAGS.frequencies_csv_path)
+    cards_dict = converter_lib.ExtractCards(FLAGS.xml_input_path)
 
-    FQ = frequency_lib.Frequencies(FLAGS.frequencies_csv_path)
-    D = decomposer_lib.Decomposer()
-    TS = toposorter_lib.Toposorter(D, pleco_struct.cards.values())
-    AR = anki_utils_lib.AnkiReader(FLAGS.collection_path)
-    AB = anki_utils_lib.AnkiBuilder(
-        FLAGS.audio_out, AR, D, pleco_struct.cards)
+    frequencies = frequency_lib.Frequencies(FLAGS.frequencies_csv_path)
+    decomposer = decomposer_lib.Decomposer()
+    toposorter = toposorter_lib.Toposorter(decomposer, cards_dict.values())
+    anki_reader = anki_utils_lib.AnkiReader(FLAGS.collection_path)
+    anki_builder = anki_utils_lib.AnkiBuilder(
+        FLAGS.audio_out, anki_reader, decomposer, cards_dict)
 
-    sorted_headwords = TS.get_sorted(key=FQ.get_frequency)
+    sorted_headwords = toposorter.get_sorted(key=frequencies.get_frequency)
 
     for hw in sorted_headwords:
         try:
-            AB.process(hw)
+            anki_builder.process(hw)
         except Exception as e:
             logging.info(e)
             continue
 
-    AB.make_package().write_to_file(os.path.join(FLAGS.apkg_out, _OUTPUT_APKG))
+    anki_builder.make_package().write_to_file(
+        os.path.join(FLAGS.apkg_out, _OUTPUT_APKG))
 
 
 if __name__ == '__main__':
