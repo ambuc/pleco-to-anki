@@ -8,10 +8,10 @@ from absl.testing import absltest
 class AnkiUtilsTest(absltest.TestCase):
 
     def test(self):
-        self.assertEqual(anki_utils_lib.gen_template(1,
-                                                     ["foo",
-                                                      "bar"],
-                                                     ["baz"]),
+        self.assertEqual(anki_utils_lib._gen_template(1,
+                                                      ["foo",
+                                                       "bar"],
+                                                      ["baz"]),
                          {'name': 'Card 1 foo+bar=>baz',
                           'qfmt': "<span id='foo'>{{foo}}</span><br><span id='bar'>{{bar}}</span>",
                           'afmt': "{{FrontSide}} <hr><span id='baz'>{{baz}}</span>",
