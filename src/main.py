@@ -48,14 +48,17 @@ def main(argv):
     anki_builder = anki_utils_lib.AnkiBuilder(
         FLAGS.audio_out, anki_reader, decomposer, cards_dict)
 
-    sorted_headwords = toposorter.get_sorted(key=frequencies.get_frequency)
-
-    for hw in sorted_headwords:
+    added, skipped = set(), set()
+    for hw in toposorter.get_sorted(key=frequencies.get_frequency):
         try:
             anki_builder.process(hw)
         except Exception as e:
             logging.info(e)
+            skipped.add(hw)
             continue
+        added.add(hw)
+    logging.info(f"Added {len(added)}, skipped {len(skipped)}.")
+    # logging.info(f"Skipped: {list(skipped)}")
 
     anki_builder.make_package().write_to_file(
         os.path.join(FLAGS.apkg_out, _OUTPUT_APKG))
