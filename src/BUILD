@@ -141,24 +141,6 @@ py_test(
     ],
 )
 
-py_test(
-    name = "is_cjk_test",
-    srcs = ["is_cjk_test.py"],
-    python_version = "PY3",
-    deps = [
-        ":is_cjk",
-    ],
-)
-
-py_library(
-    name = "is_cjk",
-    srcs = ["is_cjk.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":tone",
-    ],
-)
-
 py_library(
     name = "xml_extractors",
     srcs = ["xml_extractors.py"],
@@ -202,62 +184,33 @@ py_binary(
     srcs = ["main.py"],
     srcs_version = "PY3",
     deps = [
-        ":anki_reader",
-        ":anki_builder",
+        ":anki_utils",
         ":decomposer",
         ":frequency",
         ":toposorter",
         ":converter",
-        ":anki_sources",
         "@abseil_py//absl:app",
         "@abseil_py//absl/flags",
     ],
 )
 
-py_library(
-    name = "anki_sources",
-    srcs = ["anki_sources.py"],
-    srcs_version = "PY3",
-    deps = [
-    ],
-)
-
-py_test(
-    name = "anki_sources_test",
-    srcs = ["anki_sources_test.py"],
-    python_version = "PY3",
-    deps = [
-        ":anki_sources",
-        "@abseil_py//absl/testing:absltest",
-    ],
-)
 
 py_library(
-    name = "anki_reader",
-    srcs = ["anki_reader.py"],
+    name = "anki_utils",
+    srcs = ["anki_utils.py"],
     srcs_version = "PY3",
     deps = [
-    ],
-)
-
-py_library(
-    name = "anki_builder",
-    srcs = ["anki_builder.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":anki_sources",
         ":card",
         ":decomposer",
-        ":anki_reader",
     ],
 )
 
 py_test(
-    name = "anki_builder_test",
-    srcs = ["anki_builder_test.py"],
+    name = "anki_utils_test",
+    srcs = ["anki_utils_test.py"],
     python_version = "PY3",
     deps = [
-        ":anki_builder",
+        ":anki_utils",
         "@abseil_py//absl/testing:absltest",
     ],
 )

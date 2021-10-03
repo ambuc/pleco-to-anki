@@ -5,8 +5,7 @@ from absl import flags
 from absl import logging
 import os
 
-from src import anki_reader as anki_reader_lib
-from src import anki_builder as anki_builder_lib
+from src import anki_utils as anki_utils_lib
 from src import converter as converter_lib
 from src import decomposer as decomposer_lib
 from src import toposorter as toposorter_lib
@@ -46,8 +45,8 @@ def main(argv):
     FQ = frequency_lib.Frequencies(FLAGS.frequencies_csv_path)
     D = decomposer_lib.Decomposer()
     TS = toposorter_lib.Toposorter(D, pleco_struct.cards.values())
-    AR = anki_reader_lib.AnkiReader(FLAGS.collection_path)
-    AB = anki_builder_lib.AnkiBuilder(
+    AR = anki_utils_lib.AnkiReader(FLAGS.collection_path)
+    AB = anki_utils_lib.AnkiBuilder(
         FLAGS.audio_out, AR, D, pleco_struct.cards)
 
     sorted_headwords = TS.get_sorted(key=FQ.get_frequency)

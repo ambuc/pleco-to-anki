@@ -1,20 +1,28 @@
-from src import anki_builder as anki_builder_lib
-
-from src import anki_reader as anki_reader_lib
+from src import anki_utils as anki_utils_lib
 
 import tempfile
 from unittest.mock import MagicMock, call
 from absl.testing import absltest
 
 
-class AnkiBuilderTest(absltest.TestCase):
+class AnkiUtilsTest(absltest.TestCase):
+
+    def test(self):
+        self.assertEqual(anki_utils_lib.gen_template(1,
+                                                     ["foo",
+                                                      "bar"],
+                                                     ["baz"]),
+                         {'name': 'Card 1 foo+bar=>baz',
+                          'qfmt': "<span id='foo'>{{foo}}</span><br><span id='bar'>{{bar}}</span>",
+                          'afmt': "{{FrontSide}} <hr><span id='baz'>{{baz}}</span>",
+                          })
 
     def test_headword_not_in_pleco_cards(self):
         anki_reader = MagicMock()
         decomposer = MagicMock()
         with tempfile.TemporaryDirectory() as audio_output_dir, tempfile.NamedTemporaryFile(mode='w+',
                                                                                             suffix='.csv') as f:
-            ab = anki_builder_lib.AnkiBuilder(
+            ab = anki_utils_lib.AnkiBuilder(
                 audio_output_dir, anki_reader, decomposer, pleco_cards={})
 
             with self.assertRaisesRegex(KeyError, ".*感冒 not in Pleco cards, cannot create Anki card.*"):
@@ -25,8 +33,8 @@ class AnkiBuilderTest(absltest.TestCase):
 
         def _sef(*args):
             if args[0] == "感冒":
-                return anki_reader_lib.CardType.New
-            return anki_reader_lib.CardType.Mature
+                return anki_utils_lib.CardType.New
+            return anki_utils_lib.CardType.Mature
         anki_reader.get_type.side_effect = _sef
 
         anki_reader.listening_v1_contains.return_value = False
@@ -35,7 +43,7 @@ class AnkiBuilderTest(absltest.TestCase):
         decomposer = MagicMock()
         with tempfile.TemporaryDirectory() as audio_output_dir, tempfile.NamedTemporaryFile(mode='w+',
                                                                                             suffix='.csv') as f:
-            ab = anki_builder_lib.AnkiBuilder(
+            ab = anki_utils_lib.AnkiBuilder(
                 audio_output_dir, anki_reader, decomposer, pleco_cards={
                     "感冒": MagicMock(
                         _headword="感冒",
