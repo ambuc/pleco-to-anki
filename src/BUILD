@@ -1,4 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_library", "py_test", "py_binary")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -7,11 +7,8 @@ py_library(
     srcs = ["card.py"],
     srcs_version = "PY3",
     deps = [
-        ":defn_extractor",
-        ":pinyin",
-        ":xml_extractors",
         ":frequency",
-        ":sound",
+        ":xml_extractors",
     ],
 )
 
@@ -25,11 +22,11 @@ py_test(
 )
 
 py_library(
-    name="decomposer",
-    srcs=["decomposer.py"],
-    srcs_version="PY3",
-    deps=[
-        "//third_party:ids"
+    name = "decomposer",
+    srcs = ["decomposer.py"],
+    srcs_version = "PY3",
+    deps = [
+        "//third_party:ids",
     ],
 )
 
@@ -44,39 +41,12 @@ py_test(
 )
 
 py_library(
-    name = "defn_extractor",
-    srcs = ["defn_extractor.py"],
-    srcs_version = "PY3",
-    deps = [
-    ],
-)
-
-py_test(
-    name = "defn_extractor_test",
-    srcs = ["defn_extractor_test.py"],
-    python_version = "PY3",
-    deps = [
-        ":defn_extractor",
-    ],
-)
-
-py_library(
-    name = "tone",
-    srcs = ["tone.py"],
-    srcs_version = "PY3",
-    deps = [
-    ],
-)
-
-py_library(
     name = "converter",
     srcs = ["converter.py"],
     srcs_version = "PY3",
     deps = [
         ":card",
         ":frequency",
-        ":pinyin",
-        ":sound",
         ":xml_extractors",
         "@abseil_py//absl/logging",
     ],
@@ -96,38 +66,10 @@ py_test(
 )
 
 py_library(
-    name = "pinyin",
-    srcs = ["pinyin.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":tone",
-    ],
-)
-
-py_library(
-    name = "sound",
-    srcs = ["sound.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":tone",
-    ],
-)
-
-py_test(
-    name = "pinyin_test",
-    srcs = ["pinyin_test.py"],
-    python_version = "PY3",
-    deps = [
-        ":pinyin",
-    ],
-)
-
-py_library(
     name = "frequency",
     srcs = ["frequency.py"],
     srcs_version = "PY3",
     deps = [
-        ":tone",
     ],
 )
 
@@ -164,8 +106,8 @@ py_library(
     srcs = ["toposorter.py"],
     srcs_version = "PY3",
     deps = [
-        ":decomposer",
         ":card",
+        ":decomposer",
     ],
 )
 
@@ -185,15 +127,14 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         ":anki_utils",
+        ":converter",
         ":decomposer",
         ":frequency",
         ":toposorter",
-        ":converter",
         "@abseil_py//absl:app",
         "@abseil_py//absl/flags",
     ],
 )
-
 
 py_library(
     name = "anki_utils",
