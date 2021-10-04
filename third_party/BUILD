@@ -19,3 +19,9 @@ py_library(
     deps = [
     ],
 )
+
+filegroup(
+    name = "hsk",
+    srcs = glob([ "hsk_*.csv", ]),
+    visibility = ["//visibility:public"],
+)

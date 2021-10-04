@@ -153,3 +153,22 @@ py_test(
         "@abseil_py//absl/testing:absltest",
     ],
 )
+
+py_library(
+    name = "hsk_utils",
+    srcs = ["hsk_utils.py"],
+    srcs_version = "PY3",
+    data = ["//third_party:hsk"],
+    deps = [
+    ],
+)
+
+py_test(
+    name = "hsk_utils_test",
+    srcs = ["hsk_utils_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":hsk_utils",
+        "@abseil_py//absl/testing:absltest",
+    ],
+)
