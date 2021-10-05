@@ -123,11 +123,15 @@ py_binary(
     name = "main",
     srcs = ["main.py"],
     srcs_version = "PY3",
+    data = [
+        "//third_party:hsk",
+    ],
     deps = [
         ":anki_utils",
         ":converter",
         ":decomposer",
         ":frequency",
+        ":hsk_utils",
         ":toposorter",
         "@abseil_py//absl:app",
         "@abseil_py//absl/flags",
@@ -140,6 +144,7 @@ py_library(
     srcs_version = "PY3",
     deps = [
         ":card",
+        ":hsk_utils",
         ":decomposer",
     ],
 )

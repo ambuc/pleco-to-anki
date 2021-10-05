@@ -37,6 +37,25 @@ class HskUtilsTest(absltest.TestCase):
         self.assertEqual(_R.GetHskLevel("笔"), 2)
         self.assertEqual(_R.GetHskLevel(""), None)
 
+    def testAndBelow(self):
+        self.assertTrue("我" in _R.GetHskAndBelow(1))
+        self.assertTrue("我" in _R.GetHskAndBelow(2))
+        self.assertTrue("我" in _R.GetHskAndBelow(3))
+        self.assertTrue("我" in _R.GetHskAndBelow(4))
+        self.assertTrue("我" in _R.GetHskAndBelow(5))
+        self.assertTrue("我" in _R.GetHskAndBelow(6))
+
+        self.assertFalse("笔" in _R.GetHskAndBelow(1))
+        self.assertTrue("笔" in _R.GetHskAndBelow(2))
+        self.assertTrue("笔" in _R.GetHskAndBelow(3))
+        self.assertTrue("笔" in _R.GetHskAndBelow(4))
+        self.assertTrue("笔" in _R.GetHskAndBelow(5))
+        self.assertTrue("笔" in _R.GetHskAndBelow(6))
+
+    def testRegression001(self):
+        self.assertEqual(_R.GetHskLevel("蔬菜"), 5)
+        self.assertEqual(_R.GetHskLevelPartial("蔬"), 5)
+
 
 if __name__ == "__main__":
     absltest.main()

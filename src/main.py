@@ -8,8 +8,9 @@ import os
 from src import anki_utils as anki_utils_lib
 from src import converter as converter_lib
 from src import decomposer as decomposer_lib
-from src import toposorter as toposorter_lib
 from src import frequency as frequency_lib
+from src import hsk_utils as hsk_utils_lib
+from src import toposorter as toposorter_lib
 
 
 FLAGS = flags.FLAGS
@@ -41,24 +42,23 @@ def main(argv):
 
     cards_dict = converter_lib.ExtractCards(FLAGS.xml_input_path)
 
+    hsk_reader = hsk_utils_lib.HskReader()
     frequencies = frequency_lib.Frequencies(FLAGS.frequencies_csv_path)
     decomposer = decomposer_lib.Decomposer()
     toposorter = toposorter_lib.Toposorter(decomposer, cards_dict.values())
     anki_reader = anki_utils_lib.AnkiReader(FLAGS.collection_path)
     anki_builder = anki_utils_lib.AnkiBuilder(
-        FLAGS.audio_out, anki_reader, decomposer, cards_dict)
+        FLAGS.audio_out, anki_reader, decomposer, hsk_reader, cards_dict)
 
     added, skipped = set(), set()
     for hw in toposorter.get_sorted(key=frequencies.get_frequency):
-        try:
-            anki_builder.process(hw)
-        except Exception as e:
-            logging.info(e)
+        deck = anki_builder.process(hw)
+        if deck is None:
             skipped.add(hw)
-            continue
-        added.add(hw)
-    logging.info(f"Added {len(added)}, skipped {len(skipped)}.")
-    # logging.info(f"Skipped: {list(skipped)}")
+        else:
+            added.add(hw)
+        logging.info(f"{hw}, {deck}")
+    logging.info(f"added {len(added)}, skipped {len(skipped)}")
 
     anki_builder.make_package().write_to_file(
         os.path.join(FLAGS.apkg_out, _OUTPUT_APKG))

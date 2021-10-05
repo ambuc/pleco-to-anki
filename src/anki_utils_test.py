@@ -20,10 +20,15 @@ class AnkiUtilsTest(absltest.TestCase):
     def test_headword_not_in_pleco_cards(self):
         anki_reader = MagicMock()
         decomposer = MagicMock()
+        hsk_reader = MagicMock()
         with tempfile.TemporaryDirectory() as audio_output_dir, tempfile.NamedTemporaryFile(mode='w+',
                                                                                             suffix='.csv') as f:
             ab = anki_utils_lib.AnkiBuilder(
-                audio_output_dir, anki_reader, decomposer, pleco_cards={})
+                audio_output_dir,
+                anki_reader,
+                decomposer,
+                hsk_reader,
+                pleco_cards={})
 
             with self.assertRaisesRegex(KeyError, ".*感冒 not in Pleco cards, cannot create Anki card.*"):
                 ab.process("感冒")
@@ -41,17 +46,24 @@ class AnkiUtilsTest(absltest.TestCase):
         anki_reader.vocab_v1_contains.return_value = False
 
         decomposer = MagicMock()
+        hsk_reader = MagicMock()
         with tempfile.TemporaryDirectory() as audio_output_dir, tempfile.NamedTemporaryFile(mode='w+',
                                                                                             suffix='.csv') as f:
             ab = anki_utils_lib.AnkiBuilder(
-                audio_output_dir, anki_reader, decomposer, pleco_cards={
+                audio_output_dir,
+                anki_reader,
+                decomposer,
+                hsk_reader,
+                pleco_cards={
                     "感冒": MagicMock(
                         _headword="感冒",
                         _pinyin_html="pinyin",
                         _sound="sound",
                         _defn_html="defn"),
-                    "感": MagicMock(_headword="感"),
-                    "冒": MagicMock(_headword="冒"),
+                    "感": MagicMock(
+                        _headword="感"),
+                    "冒": MagicMock(
+                        _headword="冒"),
                 })
 
             ab.process("感冒")

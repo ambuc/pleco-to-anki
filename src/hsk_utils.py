@@ -33,3 +33,18 @@ class HskReader():
             if hw in s:
                 return i + 1
         return None
+
+    def GetHskLevelPartial(self, hw):
+        for i, s in enumerate(self._hsks):
+            if hw in s:
+                return i + 1
+            for el in s:
+                if hw in el:
+                    return i + 1
+        return None
+
+    def GetHsk(self, n):
+        return self._hsks[n - 1]
+
+    def GetHskAndBelow(self, n):
+        return set().union(*self._hsks[:n])

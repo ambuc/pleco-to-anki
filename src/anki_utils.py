@@ -1,19 +1,41 @@
+import networkx as nx
 from anki.collection import Collection
-from enum import IntEnum
+from absl import logging
+from enum import Enum, auto
 from typing import Text, Mapping, List
 import genanki
 
 from src import card as card_lib
 from src import decomposer as decomposer_lib
+from src import hsk_utils as hsk_utils_lib
 
 
-class Deck(IntEnum):
-    UNKNOWN = 0
-    VocabV1 = 1
-    VocabV2 = 2
-    ListeningV1 = 3
-    ListeningV2 = 4
-    RadicalsV2 = 5
+class Deck(Enum):
+    UNKNOWN = auto()
+    VocabV1 = auto()
+    VocabV2 = auto()
+    ListeningV1 = auto()
+    ListeningV2 = auto()
+    RadicalsV2 = auto()
+    HSK_1_V1 = auto()
+    HSK_2_V1 = auto()
+    HSK_3_V1 = auto()
+    HSK_4_V1 = auto()
+    HSK_5_V1 = auto()
+    HSK_6_V1 = auto()
+    HSK_1_MINUS_V1 = auto()
+    HSK_2_MINUS_V1 = auto()
+    HSK_3_MINUS_V1 = auto()
+    HSK_4_MINUS_V1 = auto()
+    HSK_5_MINUS_V1 = auto()
+    HSK_6_MINUS_V1 = auto()
+    HSK_1_PLUS_V1 = auto()
+    HSK_2_PLUS_V1 = auto()
+    HSK_3_PLUS_V1 = auto()
+    HSK_4_PLUS_V1 = auto()
+    HSK_5_PLUS_V1 = auto()
+    HSK_6_PLUS_V1 = auto()
+    OTHER_V1 = auto()
 
 
 def _GetDeckId(deck):
@@ -21,7 +43,7 @@ def _GetDeckId(deck):
             Deck.VocabV2: 20001,
             Deck.ListeningV1: 20010,
             Deck.ListeningV2: 20012,
-            Deck.RadicalsV2: 20003, }.get(deck)
+            Deck.RadicalsV2: 20003, }.get(deck, 12345)
 
 
 def _GetDeckName(deck):
@@ -29,23 +51,26 @@ def _GetDeckName(deck):
             Deck.VocabV2: "zw::vocab_v2",
             Deck.ListeningV1: "zw::listening_v1",
             Deck.ListeningV2: "zw::listening_v2",
-            Deck.RadicalsV2: "zw::radicals_v2", }.get(deck)
-
-
-def _GetModelId(deck):
-    return {Deck.VocabV1: 10000,
-            Deck.VocabV2: 10001,
-            Deck.ListeningV1: 10010,
-            Deck.ListeningV2: 10002,
-            Deck.RadicalsV2: 10003, }.get(deck)
-
-
-def _GetModelName(deck):
-    return {Deck.VocabV1: "model_zw_vocab_v1",
-            Deck.VocabV2: "model_zw_vocab_v2",
-            Deck.ListeningV1: "model_zw_listening_v1",
-            Deck.ListeningV2: "model_zw_listening_v2",
-            Deck.RadicalsV2: "model_zw_radicals_v2", }.get(deck)
+            Deck.RadicalsV2: "zw::radicals_v2",
+            Deck.HSK_1_V1: "hsk::1",
+            Deck.HSK_2_V1: "hsk::2",
+            Deck.HSK_3_V1: "hsk::3",
+            Deck.HSK_4_V1: "hsk::4",
+            Deck.HSK_5_V1: "hsk::5",
+            Deck.HSK_6_V1: "hsk::6",
+            Deck.HSK_1_MINUS_V1: "hsk::1m",
+            Deck.HSK_2_MINUS_V1: "hsk::2m",
+            Deck.HSK_3_MINUS_V1: "hsk::3m",
+            Deck.HSK_4_MINUS_V1: "hsk::4m",
+            Deck.HSK_5_MINUS_V1: "hsk::5m",
+            Deck.HSK_6_MINUS_V1: "hsk::6m",
+            Deck.HSK_1_PLUS_V1: "hsk::1p",
+            Deck.HSK_2_PLUS_V1: "hsk::2p",
+            Deck.HSK_3_PLUS_V1: "hsk::3p",
+            Deck.HSK_4_PLUS_V1: "hsk::4p",
+            Deck.HSK_5_PLUS_V1: "hsk::5p",
+            Deck.HSK_6_PLUS_V1: "hsk::1p",
+            }.get(deck, "other")
 
 
 _SCRIPT = """
@@ -100,8 +125,8 @@ def _gen_template(idx, map_from: List[Text], map_to: List[Text]):
 
 
 _VOCAB_MODEL = genanki.Model(
-    _GetModelId(Deck.VocabV2),
-    _GetModelName(Deck.VocabV2),
+    12345,
+    "model_zw_vocab_v2",
     fields=[
         {'name': 'characters'},
         {'name': 'pinyin'},
@@ -121,8 +146,8 @@ _VOCAB_MODEL = genanki.Model(
     css=_CSS)
 
 _LISTENING_V2_MODEL = genanki.Model(
-    _GetModelId(Deck.ListeningV2),
-    _GetModelName(Deck.ListeningV2),
+    12345,
+    "model_zw_listening_v2",
     fields=[
         {'name': 'audio'},
         {'name': 'meaning'},
@@ -135,34 +160,13 @@ _LISTENING_V2_MODEL = genanki.Model(
     ],
     css=_CSS)
 
-_RADICALS_V2_MODEL = genanki.Model(
-    _GetModelId(Deck.RadicalsV2),
-    _GetModelName(Deck.RadicalsV2),
-    fields=[
-        {'name': 'characters'},
-        {'name': 'pinyin'},
-        {'name': 'meaning'},
-        {'name': 'audio'},
-    ],
-    templates=[
-        _gen_template(
-            1, ["characters", "meaning"], ["pinyin", "audio"]),
-        _gen_template(
-            2, ["characters", "pinyin", "audio"], ["meaning"]),
-        _gen_template(
-            3, ["pinyin", "audio", "meaning"], ["characters"]),
-        _gen_template(
-            4, ["characters"], ["pinyin", "meaning", "audio"]),
-    ],
-    css=_CSS)
 
-
-class CardType(IntEnum):
-    New = 0
-    Learning = 1
-    Mature = 2
-    Absent = 3
-    Other = 4
+class CardType(Enum):
+    New = auto()
+    Learning = auto()
+    Mature = auto()
+    Absent = auto()
+    Other = auto()
 
     @staticmethod
     def parse(s):
@@ -208,107 +212,128 @@ class AnkiBuilder():
                  audio_dir: Text,
                  anki_reader: AnkiReader,
                  decomposer: decomposer_lib.Decomposer,
+                 hsk_reader: hsk_utils_lib.HskReader,
                  pleco_cards: Mapping[Text,
                                       card_lib.Card]):
         self._audio_dir = audio_dir
         self._anki_reader = anki_reader
         self._decomposer = decomposer
+        self._hsk_reader = hsk_reader
         self._pleco_cards = pleco_cards
 
         self._decks = {
             e: genanki.Deck(_GetDeckId(e), _GetDeckName(e))
-            for e in [Deck.RadicalsV2, Deck.VocabV2, Deck.ListeningV2]
+            for e in [
+                Deck.HSK_1_V1,
+                Deck.HSK_2_V1,
+                Deck.HSK_3_V1,
+                Deck.HSK_4_V1,
+                Deck.HSK_5_V1,
+                Deck.HSK_6_V1,
+                Deck.HSK_1_MINUS_V1,
+                Deck.HSK_2_MINUS_V1,
+                Deck.HSK_3_MINUS_V1,
+                Deck.HSK_4_MINUS_V1,
+                Deck.HSK_5_MINUS_V1,
+                Deck.HSK_6_MINUS_V1,
+                Deck.HSK_1_PLUS_V1,
+                Deck.HSK_2_PLUS_V1,
+                Deck.HSK_3_PLUS_V1,
+                Deck.HSK_4_PLUS_V1,
+                Deck.HSK_5_PLUS_V1,
+                Deck.HSK_6_PLUS_V1,
+                Deck.OTHER_V1,
+            ]
         }
 
     def process(self, headword):
+        deck = self._sort_into_deck(headword)
+        if deck:
+            self._add_to_deck(headword, deck)
+        return deck
+
+    def _sort_into_deck(self, headword) -> Deck:
         if headword not in self._pleco_cards:
-            raise KeyError(
+            logging.error(
                 f"{headword} not in Pleco cards, cannot create Anki card.")
+            return None
 
-        if not self._add_to_radicalv2_deck(headword):
-            self._add_to_vocabv2_deck(headword)
-            self._add_to_listeningv2_deck(headword)
+        hsk_level = self._hsk_reader.GetHskLevel(headword)
+        if hsk_level is not None:
+            deck = [Deck.HSK_1_V1,
+                    Deck.HSK_2_V1,
+                    Deck.HSK_3_V1,
+                    Deck.HSK_4_V1,
+                    Deck.HSK_5_V1,
+                    Deck.HSK_6_V1,
+                    ][hsk_level - 1]
+            return deck
 
-    def _add_to_radicalv2_deck(self, headword):
-        # returns True if added as a radical
-        if self._anki_reader.vocab_v1_contains(headword):
-            return False
-        if len(headword) > 1:
-            return False
-        decomposition = self._decomposer.decompose(headword).decomposition
-        if not (decomposition == [] or decomposition == [
-                headword] or decomposition == headword):
-            return False
-        card_obj = self._pleco_cards[headword]
-        card_obj.WriteSoundfile(self._audio_dir)
-        self._decks[Deck.RadicalsV2].add_note(genanki.Note(model=_RADICALS_V2_MODEL,
-                                                           fields=[
-                                                               card_obj._headword,
-                                                               card_obj._pinyin_html,
-                                                               card_obj._defn_html,
-                                                               card_obj._sound,
-                                                           ]))
-        return True
-
-    def _add_to_vocabv2_deck(self, headword) -> bool:
-        if self._anki_reader.vocab_v1_contains(headword):
-            return False
-
-        # raises a verbose exception if not added for some reason.
-        card_type = self._anki_reader.get_type(headword)
-        if card_type == CardType.Mature:
-            # don't add it if it's already mature.
-            return False
-        if headword not in self._pleco_cards:
-            # can't add it if we don't have a pleco entry.
-            return False
-
-        # find components
-        components = []
-        if len(headword) > 1:
-            components = [w for w in headword]
-        else:
-            try:
-                components = self._decomposer.decompose(
-                    headword).decomposition[1:] or []
-            except ValueError:
-                components = []
-
-        if any(self._anki_reader.get_type(c) !=
-               CardType.Mature for c in components):
-            return False
-
-        card_obj = self._pleco_cards[headword]
-        card_obj.WriteSoundfile(self._audio_dir)
-        self._decks[Deck.VocabV2].add_note(genanki.Note(model=_VOCAB_MODEL,
-                                                        fields=[
-                                                            card_obj._headword,
-                                                            card_obj._pinyin_html,
-                                                            card_obj._defn_html,
-                                                            card_obj._sound,
-                                                        ]))
-        return True
-
-    def _add_to_listeningv2_deck(self, headword) -> bool:
-        if self._anki_reader.listening_v1_contains(headword):
-            return False
+        G = self._decomposer._graph
 
         if len(headword) == 1:
-            # too short, don't make a card in the listening deck.
-            return False
+            # If our headword is a single character,
+            for deck, checkset in [
+                # For every HSK tier,
+                (Deck.HSK_1_MINUS_V1, self._hsk_reader.GetHskAndBelow(1)),
+                (Deck.HSK_2_MINUS_V1, self._hsk_reader.GetHskAndBelow(2)),
+                (Deck.HSK_3_MINUS_V1, self._hsk_reader.GetHskAndBelow(3)),
+                (Deck.HSK_4_MINUS_V1, self._hsk_reader.GetHskAndBelow(4)),
+                (Deck.HSK_5_MINUS_V1, self._hsk_reader.GetHskAndBelow(5)),
+                (Deck.HSK_6_MINUS_V1, self._hsk_reader.GetHskAndBelow(6)),
+            ]:
+                if headword in set(c for w in checkset for c in w):
+                    return deck
 
+                try:
+                    # If the headword is a part of any whole in our checkset up
+                    # to and including HSK N
+                    next(
+                        nx.algorithms.simple_paths.all_simple_paths(
+                            G, headword, checkset | set(
+                                c for w in checkset for c in w)))
+                    return deck
+                except nx.NodeNotFound as e:
+                    logging.error(str(e))
+                    continue
+                except StopIteration:
+                    continue
+        # else if our headword is many characters,
+        hsk_levels = [self._hsk_reader.GetHskLevel(c) for c in headword]
+        hsk_levels = [h for h in hsk_levels if h is not None]
+        if hsk_levels == []:
+            return Deck.OTHER_V1
+        hsk_level = max(hsk_levels)
+        deck = [Deck.HSK_1_PLUS_V1,
+                Deck.HSK_2_PLUS_V1,
+                Deck.HSK_3_PLUS_V1,
+                Deck.HSK_4_PLUS_V1,
+                Deck.HSK_5_PLUS_V1,
+                Deck.HSK_6_PLUS_V1,
+                ][hsk_level - 1]
+        return deck
+
+    def _add_to_deck(self, headword, deck_enum):
         card_obj = self._pleco_cards[headword]
         card_obj.WriteSoundfile(self._audio_dir)
-        self._decks[Deck.ListeningV2].add_note(
+        deck = self._decks[deck_enum]
+        deck.add_note(
             genanki.Note(
-                model=_LISTENING_V2_MODEL,
+                model=_VOCAB_MODEL,
                 fields=[
+                    card_obj._headword,
+                    card_obj._pinyin_html,
+                    card_obj._defn_html,
+                    card_obj._sound,
+                ]))
+        if len(headword) > 1:
+            deck.add_note(genanki.Note(
+                model=_LISTENING_V2_MODEL, fields=[
                     card_obj._sound,
                     card_obj._defn_html,
                     card_obj._pinyin_html,
                     card_obj._headword,
                 ]))
-        return True
 
     def make_package(self):
         return genanki.Package(self._decks.values())
