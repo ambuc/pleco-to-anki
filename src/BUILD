@@ -177,3 +177,24 @@ py_test(
         "@abseil_py//absl/testing:absltest",
     ],
 )
+
+py_library(
+    name = "categorizer",
+    srcs = ["categorizer.py"],
+    srcs_version = "PY3",
+    deps = [
+        ":card",
+        ":hsk_utils",
+        ":decomposer",
+    ],
+)
+
+py_test(
+    name = "categorizer_test",
+    srcs = ["categorizer_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":categorizer",
+        "@abseil_py//absl/testing:absltest",
+    ],
+)
