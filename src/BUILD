@@ -127,6 +127,7 @@ py_binary(
         "//third_party:hsk",
     ],
     deps = [
+        ":categorizer",
         ":anki_utils",
         ":converter",
         ":decomposer",
@@ -143,6 +144,7 @@ py_library(
     srcs = ["anki_utils.py"],
     srcs_version = "PY3",
     deps = [
+        ":categorizer",
         ":card",
         ":hsk_utils",
         ":decomposer",

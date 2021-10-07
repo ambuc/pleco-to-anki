@@ -6,71 +6,9 @@ from typing import Text, Mapping, List
 import genanki
 
 from src import card as card_lib
+from src import categorizer as categorizer_lib
 from src import decomposer as decomposer_lib
 from src import hsk_utils as hsk_utils_lib
-
-
-class Deck(Enum):
-    UNKNOWN = auto()
-    VocabV1 = auto()
-    VocabV2 = auto()
-    ListeningV1 = auto()
-    ListeningV2 = auto()
-    RadicalsV2 = auto()
-    HSK_1_V1 = auto()
-    HSK_2_V1 = auto()
-    HSK_3_V1 = auto()
-    HSK_4_V1 = auto()
-    HSK_5_V1 = auto()
-    HSK_6_V1 = auto()
-    HSK_1_MINUS_V1 = auto()
-    HSK_2_MINUS_V1 = auto()
-    HSK_3_MINUS_V1 = auto()
-    HSK_4_MINUS_V1 = auto()
-    HSK_5_MINUS_V1 = auto()
-    HSK_6_MINUS_V1 = auto()
-    HSK_1_PLUS_V1 = auto()
-    HSK_2_PLUS_V1 = auto()
-    HSK_3_PLUS_V1 = auto()
-    HSK_4_PLUS_V1 = auto()
-    HSK_5_PLUS_V1 = auto()
-    HSK_6_PLUS_V1 = auto()
-    OTHER_V1 = auto()
-
-
-def _GetDeckId(deck):
-    return {Deck.VocabV1: 20000,
-            Deck.VocabV2: 20001,
-            Deck.ListeningV1: 20010,
-            Deck.ListeningV2: 20012,
-            Deck.RadicalsV2: 20003, }.get(deck, 12345)
-
-
-def _GetDeckName(deck):
-    return {Deck.VocabV1: "zw::vocab_v1",
-            Deck.VocabV2: "zw::vocab_v2",
-            Deck.ListeningV1: "zw::listening_v1",
-            Deck.ListeningV2: "zw::listening_v2",
-            Deck.RadicalsV2: "zw::radicals_v2",
-            Deck.HSK_1_V1: "hsk::1",
-            Deck.HSK_2_V1: "hsk::2",
-            Deck.HSK_3_V1: "hsk::3",
-            Deck.HSK_4_V1: "hsk::4",
-            Deck.HSK_5_V1: "hsk::5",
-            Deck.HSK_6_V1: "hsk::6",
-            Deck.HSK_1_MINUS_V1: "hsk::1m",
-            Deck.HSK_2_MINUS_V1: "hsk::2m",
-            Deck.HSK_3_MINUS_V1: "hsk::3m",
-            Deck.HSK_4_MINUS_V1: "hsk::4m",
-            Deck.HSK_5_MINUS_V1: "hsk::5m",
-            Deck.HSK_6_MINUS_V1: "hsk::6m",
-            Deck.HSK_1_PLUS_V1: "hsk::1p",
-            Deck.HSK_2_PLUS_V1: "hsk::2p",
-            Deck.HSK_3_PLUS_V1: "hsk::3p",
-            Deck.HSK_4_PLUS_V1: "hsk::4p",
-            Deck.HSK_5_PLUS_V1: "hsk::5p",
-            Deck.HSK_6_PLUS_V1: "hsk::1p",
-            }.get(deck, "other")
 
 
 _SCRIPT = """
@@ -210,113 +148,28 @@ class AnkiReader():
 class AnkiBuilder():
     def __init__(self,
                  audio_dir: Text,
-                 anki_reader: AnkiReader,
-                 decomposer: decomposer_lib.Decomposer,
-                 hsk_reader: hsk_utils_lib.HskReader,
+                 categorizer: categorizer_lib.Categorizer,
                  pleco_cards: Mapping[Text,
                                       card_lib.Card]):
         self._audio_dir = audio_dir
-        self._anki_reader = anki_reader
-        self._decomposer = decomposer
-        self._hsk_reader = hsk_reader
+        self._categorizer = categorizer
         self._pleco_cards = pleco_cards
 
-        self._decks = {
-            e: genanki.Deck(_GetDeckId(e), _GetDeckName(e))
-            for e in [
-                Deck.HSK_1_V1,
-                Deck.HSK_2_V1,
-                Deck.HSK_3_V1,
-                Deck.HSK_4_V1,
-                Deck.HSK_5_V1,
-                Deck.HSK_6_V1,
-                Deck.HSK_1_MINUS_V1,
-                Deck.HSK_2_MINUS_V1,
-                Deck.HSK_3_MINUS_V1,
-                Deck.HSK_4_MINUS_V1,
-                Deck.HSK_5_MINUS_V1,
-                Deck.HSK_6_MINUS_V1,
-                Deck.HSK_1_PLUS_V1,
-                Deck.HSK_2_PLUS_V1,
-                Deck.HSK_3_PLUS_V1,
-                Deck.HSK_4_PLUS_V1,
-                Deck.HSK_5_PLUS_V1,
-                Deck.HSK_6_PLUS_V1,
-                Deck.OTHER_V1,
-            ]
-        }
+        # TODO Rather than write apkg, why not reach into anki db and create
+        # cards / set tags?
+        self._decks = {e: genanki.Deck(123, str(e))
+                       for e in categorizer_lib.Deck}
 
     def process(self, headword):
-        deck = self._sort_into_deck(headword)
-        if deck:
-            self._add_to_deck(headword, deck)
-        return deck
-
-    def _sort_into_deck(self, headword) -> Deck:
         if headword not in self._pleco_cards:
-            logging.error(
-                f"{headword} not in Pleco cards, cannot create Anki card.")
-            return None
-
-        hsk_level = self._hsk_reader.GetHskLevel(headword)
-        if hsk_level is not None:
-            deck = [Deck.HSK_1_V1,
-                    Deck.HSK_2_V1,
-                    Deck.HSK_3_V1,
-                    Deck.HSK_4_V1,
-                    Deck.HSK_5_V1,
-                    Deck.HSK_6_V1,
-                    ][hsk_level - 1]
-            return deck
-
-        G = self._decomposer._graph
-
-        if len(headword) == 1:
-            # If our headword is a single character,
-            for deck, checkset in [
-                # For every HSK tier,
-                (Deck.HSK_1_MINUS_V1, self._hsk_reader.GetHskAndBelow(1)),
-                (Deck.HSK_2_MINUS_V1, self._hsk_reader.GetHskAndBelow(2)),
-                (Deck.HSK_3_MINUS_V1, self._hsk_reader.GetHskAndBelow(3)),
-                (Deck.HSK_4_MINUS_V1, self._hsk_reader.GetHskAndBelow(4)),
-                (Deck.HSK_5_MINUS_V1, self._hsk_reader.GetHskAndBelow(5)),
-                (Deck.HSK_6_MINUS_V1, self._hsk_reader.GetHskAndBelow(6)),
-            ]:
-                if headword in set(c for w in checkset for c in w):
-                    return deck
-
-                try:
-                    # If the headword is a part of any whole in our checkset up
-                    # to and including HSK N
-                    next(
-                        nx.algorithms.simple_paths.all_simple_paths(
-                            G, headword, checkset | set(
-                                c for w in checkset for c in w)))
-                    return deck
-                except nx.NodeNotFound as e:
-                    logging.error(str(e))
-                    continue
-                except StopIteration:
-                    continue
-        # else if our headword is many characters,
-        hsk_levels = [self._hsk_reader.GetHskLevel(c) for c in headword]
-        hsk_levels = [h for h in hsk_levels if h is not None]
-        if hsk_levels == []:
-            return Deck.OTHER_V1
-        hsk_level = max(hsk_levels)
-        deck = [Deck.HSK_1_PLUS_V1,
-                Deck.HSK_2_PLUS_V1,
-                Deck.HSK_3_PLUS_V1,
-                Deck.HSK_4_PLUS_V1,
-                Deck.HSK_5_PLUS_V1,
-                Deck.HSK_6_PLUS_V1,
-                ][hsk_level - 1]
-        return deck
-
-    def _add_to_deck(self, headword, deck_enum):
+            return False
         card_obj = self._pleco_cards[headword]
+        deck = self._categorizer.sort_into_deck(headword)
+        if not deck:
+            return False
+        logging.info(f"{headword}, {str(deck)}")
         card_obj.WriteSoundfile(self._audio_dir)
-        deck = self._decks[deck_enum]
+        deck = self._decks[deck]
         deck.add_note(
             genanki.Note(
                 model=_VOCAB_MODEL,
@@ -335,5 +188,9 @@ class AnkiBuilder():
                     card_obj._headword,
                 ]))
 
+        return True
+
     def make_package(self):
+        for deck_enum, deck_obj in self._decks.items():
+            logging.info(f"{deck_enum}:  {len(deck_obj.notes)}")
         return genanki.Package(self._decks.values())

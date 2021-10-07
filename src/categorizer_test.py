@@ -136,8 +136,8 @@ class CategorizerTest(absltest.TestCase):
         # parts of 'd'
         self.assertEqual(c.sort_into_deck("c"), Deck.HSK_1_MINUS_V1)
         self.assertEqual(c.sort_into_deck("l"), Deck.HSK_1_MINUS_V1)
+        self.assertEqual(c.sort_into_deck("cl"), Deck.HSK_1_PLUS_V1)
         # absent
-        self.assertEqual(c.sort_into_deck("cl"), Deck.OTHER_V1)
         self.assertEqual(c.sort_into_deck("x"), Deck.OTHER_V1)
 
     def test_hsk_minus_regression(self):
